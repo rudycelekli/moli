@@ -171,12 +171,15 @@ struct InterestEventInitDeclaration<'scope> {
     source: v8::Local<'scope, v8::Value>,
 }
 
-#[derive(WebApiObject)]
-#[webapi(plain, data_properties, enumerable)]
-struct PopStateEventInitDeclaration<'scope> {
-    state: v8::Local<'scope, v8::Value>,
-    #[webapi(data_property = "hasUAVisualTransition")]
+#[derive(Default, webidl::WebIdlDictionary)]
+#[webidl(prefix = "PopStateEventInit", snapshot)]
+struct PopStateEventInitMembers<'s> {
+    #[webidl(name = "hasUAVisualTransition", default = false)]
+    #[webidl(snapshot_order = 1)]
     has_ua_visual_transition: bool,
+    #[webidl(converter = "raw", snapshot_default = v8::null(scope).into())]
+    #[webidl(snapshot_order = 0)]
+    state: Option<v8::Local<'s, v8::Value>>,
 }
 
 /// Members are declared in Web IDL lexicographic order.
@@ -451,11 +454,23 @@ pub(in crate::context_bootstrap::events::subclasses) fn initialize_pop_state_eve
     scope: &mut v8::PinScope<'s, '_>,
     event: v8::Local<'s, v8::Object>,
     init: Option<v8::Local<'s, v8::Object>>,
-) {
-    let state = init_value_property(scope, init, "state").unwrap_or_else(|| v8::null(scope).into());
-    PopStateEventInitDeclaration::new(state, false)
-        .initialize(scope, event)
+) -> bool {
+    let parsed = match init {
+        Some(init) => {
+            match webidl::parse_dictionary_object::<PopStateEventInitMembers>(scope, init) {
+                Ok(parsed) => parsed,
+                Err(error) => {
+                    webidl::throw_error(scope, &error);
+                    return false;
+                }
+            }
+        }
+        None => PopStateEventInitMembers::default(),
+    };
+    parsed
+        .initialize_snapshot(scope, event)
         .expect("PopStateEvent init declaration should initialize");
+    true
 }
 
 pub(in crate::context_bootstrap::events::subclasses) fn initialize_hash_change_event<'s>(
