@@ -160,13 +160,6 @@ struct InputEventInitDeclaration<'scope> {
 
 #[derive(WebApiObject)]
 #[webapi(plain, data_properties, enumerable)]
-struct CommandEventInitDeclaration<'scope> {
-    source: v8::Local<'scope, v8::Value>,
-    command: String,
-}
-
-#[derive(WebApiObject)]
-#[webapi(plain, data_properties, enumerable)]
 struct InterestEventInitDeclaration<'scope> {
     source: v8::Local<'scope, v8::Value>,
 }
@@ -243,6 +236,15 @@ struct ToggleEventInitMembers<'s> {
     #[webidl(converter = "raw", snapshot_default = v8::null(scope).into())]
     #[webidl(snapshot_attributes = v8::PropertyAttribute::READ_ONLY | v8::PropertyAttribute::DONT_DELETE | v8::PropertyAttribute::DONT_ENUM)]
     source: Option<v8::Local<'s, v8::Value>>,
+}
+
+#[derive(Default, webidl::WebIdlDictionary)]
+#[webidl(prefix = "CommandEventInit", snapshot)]
+struct CommandEventInitMembers<'s> {
+    #[webidl(default = "", snapshot_slot = COMMAND_EVENT_COMMAND_SLOT)]
+    command: String,
+    #[webidl(nullable, interface = web_api_interfaces::Element, snapshot_slot = COMMAND_EVENT_SOURCE_SLOT)]
+    source: Option<v8::Local<'s, v8::Object>>,
 }
 
 #[derive(Default, webidl::WebIdlDictionary)]
@@ -1319,11 +1321,22 @@ pub(in crate::context_bootstrap::events::subclasses) fn initialize_command_event
     scope: &mut v8::PinScope<'s, '_>,
     event: v8::Local<'s, v8::Object>,
     init: Option<v8::Local<'s, v8::Object>>,
-) {
-    let source =
-        init_value_property(scope, init, "source").unwrap_or_else(|| v8::null(scope).into());
-    let command = init_string_property(scope, init, "command", "");
-    let _ = CommandEventInitDeclaration::new(source, command).initialize(scope, event);
+) -> bool {
+    let parsed = match init {
+        Some(init) => match webidl::parse_dictionary_object::<CommandEventInitMembers>(scope, init)
+        {
+            Ok(parsed) => parsed,
+            Err(error) => {
+                webidl::throw_error(scope, &error);
+                return false;
+            }
+        },
+        None => CommandEventInitMembers::default(),
+    };
+    if parsed.initialize_snapshot(scope, event).is_none() {
+        return false;
+    }
+    true
 }
 
 pub(in crate::context_bootstrap::events::subclasses) fn initialize_track_event<'s>(
@@ -1362,7 +1375,7 @@ fn submit_event_submitter<'s>(
         );
         return None;
     };
-    if !submitter_is_html_element(scope, object) {
+    if !event_init_value_is_element(scope, object) {
         throw_type_error(
             scope,
             "Failed to construct 'SubmitEvent': submitter must be an HTMLElement.",
@@ -1372,7 +1385,7 @@ fn submit_event_submitter<'s>(
     Some(value)
 }
 
-fn submitter_is_html_element(
+fn event_init_value_is_element(
     scope: &mut v8::PinScope<'_, '_>,
     object: v8::Local<'_, v8::Object>,
 ) -> bool {
