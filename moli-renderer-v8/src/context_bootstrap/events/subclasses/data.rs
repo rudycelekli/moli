@@ -233,8 +233,7 @@ struct ToggleEventInitMembers<'s> {
     #[webidl(default = "")]
     #[webidl(snapshot_attributes = v8::PropertyAttribute::READ_ONLY | v8::PropertyAttribute::DONT_DELETE | v8::PropertyAttribute::DONT_ENUM)]
     new_state: String,
-    #[webidl(converter = "raw", snapshot_default = v8::null(scope).into())]
-    #[webidl(snapshot_attributes = v8::PropertyAttribute::READ_ONLY | v8::PropertyAttribute::DONT_DELETE | v8::PropertyAttribute::DONT_ENUM)]
+    #[webidl(converter = "raw", snapshot_default = v8::null(scope).into(), snapshot_slot = TOGGLE_EVENT_SOURCE_SLOT)]
     source: Option<v8::Local<'s, v8::Value>>,
 }
 
