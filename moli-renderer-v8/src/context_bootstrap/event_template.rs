@@ -369,6 +369,14 @@ struct KeyboardEventTemplateMethodsDeclaration {
 #[webapi(interface = web_api_interfaces::MouseEvent, enumerable, receiver)]
 struct MouseEventTemplateMethodsDeclaration {
     #[webapi(
+        method = "getModifierState",
+        length = 1,
+        callback = event_get_modifier_state_callback,
+        receiver = web_api_interfaces::MouseEvent::is_instance
+    )]
+    get_modifier_state: (),
+
+    #[webapi(
         accessor_property = "relatedTarget",
         getter = mouse_event_related_target_getter_function
     )]
