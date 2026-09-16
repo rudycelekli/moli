@@ -31,5 +31,12 @@ pub(crate) fn simple_event_target_dispatch_event_callback<'s>(
         rv.set(v8::Boolean::new(scope, true).into());
         return;
     };
+    if crate::web_api_interfaces::IDBRequest::is_instance(scope, target)
+        || crate::web_api_interfaces::IDBTransaction::is_instance(scope, target)
+        || crate::web_api_interfaces::IDBDatabase::is_instance(scope, target)
+    {
+        crate::context_bootstrap::indexed_db::dispatch_indexed_db_script_event(scope, args, target, rv);
+        return;
+    }
     simple_object_event_target_dispatch(scope, &args, target, &mut rv);
 }
