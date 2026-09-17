@@ -371,6 +371,7 @@ interfaces! {
     OfflineAudioCompletionEvent: Event;
     AudioProcessingEvent: Event;
     OfflineAudioContext: BaseAudioContext;
+    Observable;
     OffscreenCanvas;
     OffscreenCanvasRenderingContext2D;
     Option;
@@ -568,6 +569,7 @@ interfaces! {
     StyleSheet;
     StyleSheetList;
     SubmitEvent: Event;
+    Subscriber;
     SubtleCrypto;
     SyncEvent: ExtendableEvent;
     SyncManager;
