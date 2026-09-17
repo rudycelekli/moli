@@ -204,8 +204,7 @@ pub(crate) fn simple_object_event_target_add_listener_for_target<'s>(
     let Some(listener) = call.listener else {
         return;
     };
-    let listener = simple_object_event_listener_parts(scope, listener);
-    simple_object_event_target_register_resolved_listener(
+    simple_object_event_target_register_webidl_listener(
         scope,
         target,
         call.event_type,
@@ -229,10 +228,11 @@ pub(crate) fn simple_object_event_target_register_webidl_listener<'s>(
     event_type: String,
     listener: webidl::WebIdlCallbackInterface,
     options: webidl::EventListenerOptions,
+    signal: Option<ResolvedAbortSignal<'s>>,
 ) {
     let listener = simple_object_event_listener_parts(scope, listener);
     simple_object_event_target_register_resolved_listener(
-        scope, target, event_type, listener, options, None,
+        scope, target, event_type, listener, options, signal,
     );
 }
 
