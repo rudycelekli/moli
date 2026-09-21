@@ -2227,6 +2227,7 @@ mod credential_interface_exposure_interfaces;
 mod credential_interfaces;
 mod css_keyframes_mutations;
 mod css_keyframes_receivers;
+mod cross_origin_symbol_fallback;
 mod cross_origin_window_indexes;
 mod cross_origin_window_names;
 mod device_events;
