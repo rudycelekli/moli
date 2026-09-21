@@ -2228,6 +2228,7 @@ mod credential_interfaces;
 mod css_keyframes_mutations;
 mod css_keyframes_receivers;
 mod cross_origin_window_indexes;
+mod cross_origin_window_names;
 mod device_events;
 mod document_svg_root;
 
