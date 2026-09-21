@@ -2354,3 +2354,4 @@ mod streams_sync_protocol;
 mod performance_user_timing;
 mod webtransport_stream_interface_exposure;
 mod window_restricted_accessors;
+mod window_scheduling_receivers;
