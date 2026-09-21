@@ -7,6 +7,7 @@ mod message_port_transfer;
 mod picture_in_picture_interfaces;
 mod visual_viewport_receiver;
 mod writable_stream_native_receivers;
+mod dom_rect_factory_descriptors;
 mod webtransport_stream_interface_exposure;
 
 use super::post_parse::dynamic_script_execute_is_runnable_before_dom_content_loaded;
@@ -2278,6 +2279,7 @@ mod midi_owner_interfaces;
 mod mouse_snapshot;
 mod native_bridge_identity;
 mod native_exception_stack_capture;
+mod navigation_timing_inheritance;
 mod no_cors_header_fill;
 mod node_event_worlds;
 mod observable;
@@ -2313,6 +2315,7 @@ mod webidl_collections;
 mod webidl_fetch;
 mod webidl_receivers;
 mod webidl_trusted_types;
+mod history_replace_forward;
 mod websocket;
 mod window_cross_origin_getters;
 mod window_event_receivers;
@@ -2320,11 +2323,7 @@ mod window_execution_context;
 mod window_getter_consolidation;
 mod window_receiver_access;
 mod worklet_interfaces;
-
-
-mod history_replace_forward;
 mod extracted;
-mod navigation_timing_inheritance;
 mod payment_response_interfaces;
 
 mod body_mime_consolidation;
@@ -2353,6 +2352,7 @@ mod streams_sync_protocol;
 
 mod performance_user_timing;
 mod webtransport_stream_interface_exposure;
+mod window_promise_method_receivers;
 mod window_restricted_accessors;
 mod window_scheduling_receivers;
 mod window_sync_method_receivers;
