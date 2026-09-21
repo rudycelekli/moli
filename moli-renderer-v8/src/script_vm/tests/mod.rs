@@ -7,6 +7,8 @@ mod message_port_transfer;
 mod picture_in_picture_interfaces;
 mod visual_viewport_receiver;
 mod writable_stream_native_receivers;
+mod webtransport_stream_interface_exposure;
+
 use super::post_parse::dynamic_script_execute_is_runnable_before_dom_content_loaded;
 use super::{
     PostParseDriverStep, PostParseLifecycleAdvance, PostParseLifecycleCompletionAction,
@@ -2321,24 +2323,20 @@ mod worklet_interfaces;
 
 
 mod history_replace_forward;
-
 mod extracted;
 mod navigation_timing_inheritance;
 mod payment_response_interfaces;
 
 mod body_mime_consolidation;
 mod response_blob_mime;
-
 mod intersection_target_order;
 mod observer_element_arguments;
 mod report_body_interface_exposure;
 
 mod media_device_interfaces;
-
 mod dom_rect_factory_descriptors;
 mod dom_rect_structured_clone;
 mod domrect_receiver_consolidation;
-
 mod resize_observer_entries;
 
 mod payment_events;
@@ -2355,3 +2353,4 @@ mod streams_sync_protocol;
 
 mod performance_user_timing;
 mod webtransport_stream_interface_exposure;
+mod window_restricted_accessors;
