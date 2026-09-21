@@ -2312,7 +2312,7 @@ mod webidl_fetch;
 mod webidl_receivers;
 mod webidl_trusted_types;
 mod websocket;
-mod webtransport_stream_interface_exposure;
+mod window_cross_origin_getters;
 mod window_event_receivers;
 mod window_execution_context;
 mod window_getter_consolidation;
@@ -2354,3 +2354,4 @@ mod file_reader_handlers;
 mod streams_sync_protocol;
 
 mod performance_user_timing;
+mod webtransport_stream_interface_exposure;
