@@ -2503,13 +2503,6 @@ pub(super) struct HtmlAreaElementPrototypeDeclaration {
     download: (),
     #[webapi(
         accessor_property,
-        getter = html_hreflang_getter_function,
-        setter = dom_string_reflection_setter_function,
-        setter_data = DomStringReflection::AreaHreflang
-    )]
-    hreflang: (),
-    #[webapi(
-        accessor_property,
         getter = html_shape_getter_function,
         setter = dom_string_reflection_setter_function,
         setter_data = DomStringReflection::AreaShape
@@ -2522,13 +2515,6 @@ pub(super) struct HtmlAreaElementPrototypeDeclaration {
         setter_data = UsvStringReflection::AreaPing
     )]
     ping: (),
-    #[webapi(
-        accessor_property,
-        getter = html_type_getter_function,
-        setter = dom_string_reflection_setter_function,
-        setter_data = DomStringReflection::AreaType
-    )]
-    r#type: (),
     #[webapi(
         accessor_property = "noHref",
         getter = html_no_href_getter_function,
