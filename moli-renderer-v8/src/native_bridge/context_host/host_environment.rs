@@ -2182,6 +2182,7 @@ impl JsContextHost {
         let changed =
             unsafe { DocumentRuntime::set_input_value(&mut *self.runtime, handle, value) };
         if changed {
+            self.reconcile_text_control_selection_value(handle);
             self.note_input_value_state_style_activity(handle, old_state, &container_old_states);
         }
         changed
@@ -2200,6 +2201,7 @@ impl JsContextHost {
             DocumentRuntime::set_input_value_with_dirty(&mut *self.runtime, handle, value, dirty)
         };
         if changed {
+            self.reconcile_text_control_selection_value(handle);
             self.note_input_value_state_style_activity(handle, old_state, &container_old_states);
         }
         changed
@@ -2216,6 +2218,7 @@ impl JsContextHost {
             DocumentRuntime::set_input_value_from_user_edit(&mut *self.runtime, handle, value)
         };
         if changed {
+            self.reconcile_text_control_selection_value(handle);
             self.note_input_value_state_style_activity(handle, old_state, &container_old_states);
         }
         changed
