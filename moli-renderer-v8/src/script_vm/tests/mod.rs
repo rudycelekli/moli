@@ -2295,6 +2295,7 @@ mod no_cors_header_fill;
 mod node_event_worlds;
 mod observable;
 mod observer_callbacks;
+mod observer_documents;
 mod observer_receivers;
 mod popup_root_window;
 mod post_parse;
