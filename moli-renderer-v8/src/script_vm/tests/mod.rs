@@ -2220,6 +2220,7 @@ mod audio_node_interfaces;
 mod bitmap_rendering_context_interface_interfaces;
 mod blob_range;
 mod blob_response_headers;
+mod body_completion;
 mod body_mime;
 mod browser_api;
 mod cache_interfaces;
