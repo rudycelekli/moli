@@ -2320,6 +2320,7 @@ mod rtc_configuration;
 mod response_blob_mime;
 mod retained_child_window;
 mod script_terminal_completion;
+mod service_worker_interfaces;
 mod speech_events;
 mod storage_dense_name_arrays;
 mod streams;
