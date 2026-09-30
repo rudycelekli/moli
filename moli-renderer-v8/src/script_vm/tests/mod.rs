@@ -2219,6 +2219,8 @@ fn decode_png_dimensions_from_data_url(data_url: &str) -> (u32, u32) {
 mod audio_node_interfaces;
 mod attr_accessors;
 mod attr_node_references;
+mod audio_channel_node_interfaces;
+mod audio_event_interfaces;
 mod audio_param_node_interfaces;
 mod audio_source_interfaces;
 mod bitmap_rendering_context_interface_interfaces;
@@ -2278,8 +2280,6 @@ mod svg_animation_interfaces;
 mod svg_computed_path_precision;
 mod svg_detached_lengths;
 mod svg_transform_sync_consolidation;
-
-mod audio_event_interfaces;
 mod audio_value_owner_interface_exposure_interfaces;
 mod cross_origin_named_children;
 mod declarative_receivers;
