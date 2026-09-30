@@ -2344,6 +2344,7 @@ mod url_components;
 mod video_codecs_shell;
 mod web_lock_interface_exposure_interfaces;
 mod wake_lock_interfaces;
+mod wave_shaper_interfaces;
 mod webgl_interfaces;
 mod webidl_collections;
 mod webidl_fetch;
