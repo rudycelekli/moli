@@ -310,6 +310,8 @@ struct CommandEventInitMembers<'s> {
     source: Option<v8::Local<'s, v8::Object>>,
 }
 
+/// Convert inherited EventInit members first, then StorageEventInit members in
+/// lexicographic order, before initializing either base or subclass state.
 #[derive(Default, webidl::WebIdlDictionary)]
 #[webidl(prefix = "StorageEventInit", snapshot)]
 pub(in crate::context_bootstrap::events) struct StorageEventInitMembers<'s> {
