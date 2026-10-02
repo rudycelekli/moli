@@ -128,14 +128,6 @@ fn event_subclass_constructor_callback<'s>(
         } else {
             None
         };
-    let message_event_init = if kind == EventSubclassKind::MessageEvent {
-        let Some(init) = message::parse_message_event_init(scope, &args) else {
-            return;
-        };
-        Some(init)
-    } else {
-        None
-    };
     let (bubbles, cancelable, composed) = security_policy_init
         .as_ref()
         .map(security_policy::SecurityPolicyViolationEventInit::event_flags)
@@ -174,11 +166,6 @@ fn event_subclass_constructor_callback<'s>(
             current_entry_change_event_init
                 .as_ref()
                 .map(navigation_init::NavigationCurrentEntryChangeEventInitMembers::event_flags)
-        })
-        .or_else(|| {
-            message_event_init
-                .as_ref()
-                .map(message::MessageEventInit::event_flags)
         })
         .unwrap_or_else(|| read_event_init(scope, &args));
 
