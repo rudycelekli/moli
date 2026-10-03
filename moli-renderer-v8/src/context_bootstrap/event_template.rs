@@ -28,6 +28,7 @@ use super::{
         submit_event_respond_with_callback, submit_event_submitter_getter_function,
         track_event_track_getter_function, ui_event_pseudo_target_getter_function,
         interaction_event_source_getter,
+        input_event_get_target_ranges_callback,
         ui_event_which_getter_function,
     },
     selection_surface::document_get_selection_callback,
@@ -296,6 +297,12 @@ struct InputEventTemplateAccessorsDeclaration {
 
     #[webapi(accessor_property, getter = event_value_attribute_getter, data = crate::util::v8str(scope, "inputType"))]
     input_type: (),
+
+    #[webapi(accessor_property, getter = event_platform_attribute_getter, data = crate::util::v8str(scope, "dataTransfer"))]
+    data_transfer: (),
+
+    #[webapi(method = "getTargetRanges", length = 0, callback = input_event_get_target_ranges_callback)]
+    get_target_ranges: (),
 }
 
 #[derive(WebApiFunctionTemplate)]
