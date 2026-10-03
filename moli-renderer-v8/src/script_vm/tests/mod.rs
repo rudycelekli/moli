@@ -2255,7 +2255,9 @@ mod gamepad_interfaces;
 
 mod dom_elements;
 mod dom_exception_proxy_identity;
+mod dom_rect_structured_clone;
 mod dom_xhr;
+mod domrect_receiver_consolidation;
 mod dynamic_inline_scripts;
 mod element_click;
 mod eme_owner_interface_exposure_interfaces;
@@ -2367,8 +2369,6 @@ mod worklet_interfaces;
 
 mod report_body_interface_exposure;
 
-mod dom_rect_structured_clone;
-mod domrect_receiver_consolidation;
 mod resize_observer_entries;
 
 mod payment_events;
@@ -2384,6 +2384,8 @@ mod file_reader_handlers;
 mod streams_sync_protocol;
 
 mod performance_user_timing;
+
+
 mod window_promise_method_receivers;
 mod window_restricted_accessors;
 mod window_scheduling_receivers;
