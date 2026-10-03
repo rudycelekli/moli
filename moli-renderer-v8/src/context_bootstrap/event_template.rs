@@ -7,8 +7,6 @@ use super::{
     events::{
         clipboard_change_event_change_id_getter_function, clipboard_change_event_types_getter_function,
         clipboard_event_clipboard_data_getter_function,
-        toggle_event_source_getter_function,
-        command_event_command_getter_function, command_event_source_getter_function,
         before_unload_event_return_value_getter_function,
         before_unload_event_return_value_setter_function,
         close_event_code_getter_function, close_event_reason_getter_function,
@@ -29,6 +27,7 @@ use super::{
         pointer_event_get_predicted_events_callback, submit_event_agent_invoked_getter_function,
         submit_event_respond_with_callback, submit_event_submitter_getter_function,
         track_event_track_getter_function, ui_event_pseudo_target_getter_function,
+        interaction_event_source_getter,
         ui_event_which_getter_function,
     },
     selection_surface::document_get_selection_callback,
@@ -207,17 +206,21 @@ struct FormDataEventTemplateAccessorsDeclaration {
 #[derive(WebApiFunctionTemplate)]
 #[webapi(interface = web_api_interfaces::CommandEvent, enumerable, receiver)]
 struct CommandEventTemplateAccessorsDeclaration {
-    #[webapi(accessor_property, getter = command_event_source_getter_function)]
+    #[webapi(accessor_property, getter = interaction_event_source_getter)]
     source: (),
 
-    #[webapi(accessor_property, getter = command_event_command_getter_function)]
+    #[webapi(accessor_property, getter = event_value_attribute_getter, data = crate::util::v8str(scope, "command"))]
     command: (),
 }
 
 #[derive(WebApiFunctionTemplate)]
 #[webapi(interface = web_api_interfaces::ToggleEvent, enumerable, receiver)]
 struct ToggleEventTemplateAccessorsDeclaration {
-    #[webapi(accessor_property, getter = toggle_event_source_getter_function)]
+    #[webapi(accessor_property = "oldState", getter = event_value_attribute_getter, data = crate::util::v8str(scope, "oldState"))]
+    old_state: (),
+    #[webapi(accessor_property = "newState", getter = event_value_attribute_getter, data = crate::util::v8str(scope, "newState"))]
+    new_state: (),
+    #[webapi(accessor_property, getter = interaction_event_source_getter)]
     source: (),
 }
 

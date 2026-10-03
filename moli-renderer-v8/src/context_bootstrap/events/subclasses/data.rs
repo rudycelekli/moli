@@ -288,28 +288,6 @@ struct NavigateEventInitDeclaration<'scope> {
     source_element: v8::Local<'scope, v8::Value>,
 }
 
-#[derive(webidl::WebIdlDictionary)]
-#[webidl(prefix = "ToggleEventInit", snapshot)]
-struct ToggleEventInitMembers<'s> {
-    #[webidl(default = "")]
-    #[webidl(snapshot_attributes = v8::PropertyAttribute::READ_ONLY | v8::PropertyAttribute::DONT_DELETE | v8::PropertyAttribute::DONT_ENUM)]
-    old_state: String,
-    #[webidl(default = "")]
-    #[webidl(snapshot_attributes = v8::PropertyAttribute::READ_ONLY | v8::PropertyAttribute::DONT_DELETE | v8::PropertyAttribute::DONT_ENUM)]
-    new_state: String,
-    #[webidl(converter = "raw", snapshot_default = v8::null(scope).into(), snapshot_slot = TOGGLE_EVENT_SOURCE_SLOT)]
-    source: Option<v8::Local<'s, v8::Value>>,
-}
-
-#[derive(Default, webidl::WebIdlDictionary)]
-#[webidl(prefix = "CommandEventInit", snapshot)]
-struct CommandEventInitMembers<'s> {
-    #[webidl(default = "", snapshot_slot = COMMAND_EVENT_COMMAND_SLOT)]
-    command: String,
-    #[webidl(nullable, interface = web_api_interfaces::Element, snapshot_slot = COMMAND_EVENT_SOURCE_SLOT)]
-    source: Option<v8::Local<'s, v8::Object>>,
-}
-
 /// Convert inherited EventInit members first, then StorageEventInit members in
 /// lexicographic order, before initializing either base or subclass state.
 #[derive(Default, webidl::WebIdlDictionary)]
@@ -718,31 +696,6 @@ pub(in crate::context_bootstrap::events::subclasses) fn initialize_page_transiti
     PageTransitionEventOwnInitDeclaration::new(persisted)
         .initialize(scope, event)
         .expect("PageTransitionEvent init declaration should initialize");
-}
-
-pub(in crate::context_bootstrap::events::subclasses) fn initialize_toggle_event<'s>(
-    scope: &mut v8::PinScope<'s, '_>,
-    event: v8::Local<'s, v8::Object>,
-    init: Option<v8::Local<'s, v8::Object>>,
-) -> bool {
-    let parsed = match init {
-        Some(init) => {
-            match webidl::parse_dictionary_object::<ToggleEventInitMembers>(scope, init) {
-                Ok(parsed) => parsed,
-                Err(error) => {
-                    webidl::throw_error(scope, &error);
-                    return false;
-                }
-            }
-        }
-        None => ToggleEventInitMembers {
-            old_state: String::new(),
-            new_state: String::new(),
-            source: None,
-        },
-    };
-    let _ = parsed.initialize_snapshot(scope, event);
-    true
 }
 
 pub(in crate::context_bootstrap::events::subclasses) fn initialize_promise_rejection_event<'s>(
@@ -1484,28 +1437,6 @@ pub(in crate::context_bootstrap::events::subclasses) fn initialize_form_data_eve
         FORM_DATA_EVENT_FORM_DATA_SLOT,
         form_data,
     );
-    true
-}
-
-pub(in crate::context_bootstrap::events::subclasses) fn initialize_command_event<'s>(
-    scope: &mut v8::PinScope<'s, '_>,
-    event: v8::Local<'s, v8::Object>,
-    init: Option<v8::Local<'s, v8::Object>>,
-) -> bool {
-    let parsed = match init {
-        Some(init) => match webidl::parse_dictionary_object::<CommandEventInitMembers>(scope, init)
-        {
-            Ok(parsed) => parsed,
-            Err(error) => {
-                webidl::throw_error(scope, &error);
-                return false;
-            }
-        },
-        None => CommandEventInitMembers::default(),
-    };
-    if parsed.initialize_snapshot(scope, event).is_none() {
-        return false;
-    }
     true
 }
 
