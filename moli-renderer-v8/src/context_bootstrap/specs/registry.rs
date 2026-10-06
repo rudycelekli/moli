@@ -86,7 +86,7 @@ const CONSTRUCTOR_SPECS_BEFORE_STREAMS: &[ConstructorSpec] = &[
     },
     ConstructorSpec {
         interface: web_api_interfaces::MediaKeyMessageEvent::DESCRIPTOR,
-        kind: ConstructorKind::Shell { length: 2 },
+        kind: ConstructorKind::MediaKeyMessageEvent,
     },
     ConstructorSpec {
         interface: web_api_interfaces::MediaKeySession::DESCRIPTOR,
@@ -138,7 +138,7 @@ const CONSTRUCTOR_SPECS_BEFORE_STREAMS: &[ConstructorSpec] = &[
     },
     ConstructorSpec {
         interface: web_api_interfaces::MediaEncryptedEvent::DESCRIPTOR,
-        kind: ConstructorKind::Shell { length: 1 },
+        kind: ConstructorKind::MediaEncryptedEvent,
     },
     ConstructorSpec {
         interface: web_api_interfaces::MediaMetadata::DESCRIPTOR,
