@@ -126,11 +126,6 @@ mod window_open_named_targets;
 mod window_open_referrer;
 mod window_open_special_targets;
 mod worker_listener_invocation;
-mod error_event_init;
-mod keyboard_event_init;
-mod message_event_init;
-mod window_current_event_private;
 
 mod video_codec_support;
 
-mod event_prototype_attributes;
