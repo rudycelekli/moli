@@ -2368,6 +2368,7 @@ mod svg_tree_queries;
 mod svg_uri_reference;
 mod text_encoder_utf16_progress;
 mod time_ranges;
+mod touch_event_webidl;
 mod url_components;
 mod video_codecs_shell;
 mod web_lock_interface_exposure_interfaces;
