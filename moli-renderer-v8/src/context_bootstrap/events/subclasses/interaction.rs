@@ -1,4 +1,5 @@
 use super::super::{COMMAND_EVENT_SOURCE_SLOT, TOGGLE_EVENT_SOURCE_SLOT, event_attribute};
+use crate::context_bootstrap::events::EventInit;
 use crate::document_runtime::DomHandle;
 use crate::native_bridge::JsContextHost;
 use crate::{web_api_interfaces, webidl};
@@ -11,7 +12,7 @@ use webidl::WebIdlDictionarySerialize;
 #[webidl(prefix = "ToggleEventInit", snapshot)]
 pub(super) struct ToggleEventInit<'s> {
     #[webidl(inherit)]
-    base: super::super::EventInit,
+    base: EventInit,
     #[webidl(name = "newState", default = webidl::DomString16(Vec::new()), converter = "raw")]
     #[webidl(snapshot_order = 1)]
     new_state: webidl::DomString16,
@@ -25,7 +26,7 @@ pub(super) struct ToggleEventInit<'s> {
 impl Default for ToggleEventInit<'_> {
     fn default() -> Self {
         Self {
-            base: super::super::EventInit::default(),
+            base: EventInit::default(),
             new_state: webidl::DomString16(Vec::new()),
             old_state: webidl::DomString16(Vec::new()),
             source: None,
@@ -37,7 +38,7 @@ impl Default for ToggleEventInit<'_> {
 #[webidl(prefix = "CommandEventInit", snapshot)]
 pub(super) struct CommandEventInit<'s> {
     #[webidl(inherit)]
-    base: super::super::EventInit,
+    base: EventInit,
     #[webidl(default = webidl::DomString16(Vec::new()), converter = "raw")]
     command: webidl::DomString16,
     #[webidl(nullable, interface = web_api_interfaces::Element, snapshot_slot = COMMAND_EVENT_SOURCE_SLOT)]
@@ -47,7 +48,7 @@ pub(super) struct CommandEventInit<'s> {
 impl Default for CommandEventInit<'_> {
     fn default() -> Self {
         Self {
-            base: super::super::EventInit::default(),
+            base: EventInit::default(),
             command: webidl::DomString16(Vec::new()),
             source: None,
         }

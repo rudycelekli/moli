@@ -193,12 +193,8 @@ struct GamepadEventPrototypeDeclaration {
 #[derive(webidl::WebIdlDictionary)]
 #[webidl(prefix = "GamepadEventInit", snapshot)]
 struct GamepadEventInit<'s> {
-    #[webidl(default = false)]
-    bubbles: bool,
-    #[webidl(default = false)]
-    cancelable: bool,
-    #[webidl(default = false)]
-    composed: bool,
+    #[webidl(inherit)]
+    base: EventInit,
     #[webidl(with = gamepad_member)]
     #[webidl(snapshot_slot = GAMEPAD_SLOT, snapshot_default = v8::null(scope).into())]
     gamepad: Option<v8::Local<'s, v8::Object>>,
@@ -630,7 +626,7 @@ fn value_event_constructor<'s>(
                 parsed
                     .initialize_snapshot(scope, state)
                     .expect("value event state");
-                (parsed.bubbles, parsed.cancelable, parsed.composed)
+                (parsed.base.bubbles, parsed.base.cancelable, parsed.base.composed)
             }
             ValueEventKind::MediaEncrypted => {
                 let parsed =
