@@ -2330,7 +2330,6 @@ mod observer_receivers;
 mod offline_audio_context_interfaces;
 mod payment_response_interfaces;
 mod performance_measurement_interfaces;
-mod performance_observer_contract;
 mod performance_receivers;
 mod periodic_wave_interfaces;
 mod popup_root_window;
