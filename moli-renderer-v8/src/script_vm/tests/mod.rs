@@ -2257,6 +2257,7 @@ mod document_svg_root;
 
 mod gamepad_interfaces;
 
+mod document_create_event;
 mod dom_elements;
 mod dom_exception_proxy_identity;
 mod dom_rect_structured_clone;
