@@ -120,7 +120,7 @@ struct FileReaderTemplateMethodsDeclaration {
 }
 
 #[derive(WebApiFunctionTemplate)]
-#[webapi(interface = web_api_interfaces::XMLSerializer, enumerable)]
+#[webapi(interface = web_api_interfaces::XMLSerializer, enumerable, receiver)]
 struct XmlSerializerTemplateMethodsDeclaration {
     #[webapi(
         method,
