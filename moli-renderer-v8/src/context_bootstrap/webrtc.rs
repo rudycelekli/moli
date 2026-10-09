@@ -215,7 +215,6 @@ pub(in crate::context_bootstrap) fn install_webrtc_template_bindings<'s>(
         "RTCPeerConnectionIceEvent" | "RTCDataChannelEvent" | "RTCErrorEvent" => {
             events::install_event_template_bindings(scope, template, interface_name)
         }
-        "RTCPeerConnectionIceErrorEvent" => ice_error_event::install(scope, prototype),
         "RTCDTMFToneChangeEvent" | "RTCTrackEvent" => {
             payload_events::install(scope, prototype, interface_name)
         }
@@ -228,7 +227,6 @@ pub(in crate::context_bootstrap) fn install_webrtc_template_bindings<'s>(
         "RTCPeerConnection" => {
             RtcPeerConnectionPrototypeDeclaration::initialize_prototype_template(scope, prototype);
         }
-        "RTCErrorEvent" => events::install_event_template_bindings(scope, template, interface_name),
         "RTCRtpReceiver" => {
             RtcRtpReceiverConstructorDeclaration::initialize_template(scope, template);
         }
