@@ -2263,6 +2263,7 @@ mod document_svg_root;
 mod image_bitmap_tasks;
 mod payment_events;
 mod reporting_observer;
+mod web_locks;
 
 mod gamepad_interfaces;
 
