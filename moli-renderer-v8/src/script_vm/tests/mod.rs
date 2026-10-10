@@ -2364,6 +2364,7 @@ mod rtc_configuration;
 mod response_blob_mime;
 mod retained_child_window;
 mod rtc_certificate;
+mod rtc_dtmf_sender;
 mod rtc_encoded_frames;
 mod rtp_sender;
 mod rtp_transceivers;
