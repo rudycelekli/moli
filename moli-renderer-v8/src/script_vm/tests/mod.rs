@@ -2310,6 +2310,8 @@ mod audio_value_owner_interface_exposure_interfaces;
 mod cross_origin_named_children;
 mod declarative_receivers;
 mod frame_owner_origin_access;
+
+mod encrypted_media;
 mod hyperlink_null_url_protocol;
 mod iframe_reinsertion;
 mod iir_filter_interfaces;
