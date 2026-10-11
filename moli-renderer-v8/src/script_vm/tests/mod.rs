@@ -2296,7 +2296,6 @@ mod history_referrer;
 mod history_replace_forward;
 mod http_fixture;
 mod iframe_load_delivery;
-mod media_owner_playback_interfaces;
 mod media_recorder_shell;
 mod media_source_buffer_interface_exposure_interfaces;
 mod performance_observer_contract;
