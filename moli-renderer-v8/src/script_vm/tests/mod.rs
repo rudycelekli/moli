@@ -2406,6 +2406,7 @@ mod svg_user_transform;
 mod text_encoder_utf16_progress;
 mod time_ranges;
 mod touch_event_webidl;
+mod uncompiled_event_handler_sources;
 mod url_components;
 mod video_codecs;
 mod video_codecs_shell;
