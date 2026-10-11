@@ -2421,6 +2421,7 @@ mod webrtc_event_init;
 mod webrtc_local_description;
 mod webrtc_signaling_state;
 mod websocket;
+mod webtransport_frontend;
 mod window_cross_origin_getters;
 mod window_event_receivers;
 mod window_execution_context;
