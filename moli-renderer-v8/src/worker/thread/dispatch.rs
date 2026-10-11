@@ -4226,6 +4226,17 @@ fn dispatch_worker_global_message_event<'s>(
     script_url: &str,
 ) {
     let event = new_worker_message_event(scope, event_type, data, None, ports);
+    dispatch_worker_global_event(scope, global, event_type, event, parent_tx, script_url);
+}
+
+fn dispatch_worker_global_event<'s>(
+    scope: &mut v8::PinScope<'s, '_>,
+    global: v8::Local<'s, v8::Object>,
+    event_type: &str,
+    event: v8::Local<'s, v8::Object>,
+    parent_tx: &mpsc::UnboundedSender<WorkerToParentMessage>,
+    script_url: &str,
+) {
     set_event_dispatch_fields(scope, global, event);
 
     let listeners = simple_object_event_listeners_snapshot(scope, global, event_type);
@@ -4236,7 +4247,7 @@ fn dispatch_worker_global_message_event<'s>(
             global,
             event,
             event_type,
-            "WorkerGlobalScope message listener",
+            "WorkerGlobalScope event listener",
         ) {
             let (report, exception) = *error;
             let exception = exception.as_ref().map(|value| v8::Local::new(scope, value));
@@ -4253,6 +4264,55 @@ fn dispatch_worker_global_message_event<'s>(
     }
 
     clear_event_dispatch_fields(scope, event);
+}
+
+pub(super) fn dispatch_rtp_transform_task(
+    isolate: &mut v8::OwnedIsolate,
+    context: &v8::Global<v8::Context>,
+    task: crate::worker::rtp_tasks::RtpTransformTask,
+    parent_tx: &mpsc::UnboundedSender<WorkerToParentMessage>,
+    script_url: &str,
+) {
+    let scope = pin!(v8::HandleScope::new(isolate));
+    let scope = &mut scope.init();
+    let ctx = v8::Local::new(scope, context);
+    let scope = &mut v8::ContextScope::new(scope, ctx);
+    {
+        let try_catch = pin!(v8::TryCatch::new(scope));
+        let mut scope = try_catch.init();
+        let global = ctx.global(&scope);
+        if let Some(event) =
+            crate::context_bootstrap::run_rtp_transform_worker_task(&mut scope, task)
+        {
+            dispatch_worker_global_event(
+                &mut scope,
+                global,
+                "rtctransform",
+                event,
+                parent_tx,
+                script_url,
+            );
+        }
+        if scope.has_caught() {
+            let exception = scope.exception();
+            let message = scope.message();
+            let stack = scope.stack_trace();
+            let report = crate::exception_reporting::build_event_handler_exception_report(
+                &mut scope, exception, message, stack,
+            );
+            scope.reset();
+            dispatch_worker_exception(
+                &mut scope,
+                global,
+                report,
+                exception,
+                WorkerParentErrorEventKind::ErrorEvent,
+                parent_tx,
+                script_url,
+            );
+        }
+    }
+    perform_worker_microtask_checkpoint_and_report_pending_promise_rejections(scope);
 }
 
 /// Dispatch a parent `postMessage()` delivery into the worker global.

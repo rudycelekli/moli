@@ -436,7 +436,7 @@ impl JsContextHost {
             crate::content_security_policy::ContentSecurityPolicyReportingEndpoints,
     ) -> bool {
         struct FinishLoadingWorkerSpawn {
-            pending_messages: Vec<V8StructuredClonePayload>,
+            pending_messages: Vec<crate::worker::WorkerMessage>,
             name: String,
             storage_key_top_level_site: String,
             creator_storage_key: MoliStorageKey,
@@ -562,7 +562,7 @@ impl JsContextHost {
                 self.renderer_output_journal(),
             );
         for message in pending_messages {
-            worker_handle.post_message(message);
+            worker_handle.queue_task(message);
         }
         let client_event_producer = self
             .workers
@@ -741,6 +741,14 @@ impl JsContextHost {
         worker_id: DedicatedWorkerId,
         payload: V8StructuredClonePayload,
     ) -> bool {
+        self.queue_worker_task(worker_id, crate::worker::WorkerMessage::Post(payload))
+    }
+
+    pub(crate) fn queue_worker_task(
+        &mut self,
+        worker_id: DedicatedWorkerId,
+        task: crate::worker::WorkerMessage,
+    ) -> bool {
         self.workers
             .get_mut(&worker_id)
             .map(|state| {
@@ -753,10 +761,10 @@ impl JsContextHost {
                         if *terminated {
                             return true;
                         }
-                        pending_messages.push(payload);
+                        pending_messages.push(task);
                     }
                     WorkerExecutionState::Running { handle } => {
-                        handle.post_message(payload);
+                        handle.queue_task(task);
                     }
                 }
                 true
