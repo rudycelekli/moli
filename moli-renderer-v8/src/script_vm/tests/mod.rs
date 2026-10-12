@@ -2207,6 +2207,7 @@ mod queue_microtask;
 mod readable_algorithm_arrays;
 mod realtime_cssom;
 mod realtime_layout;
+mod realtime_publication;
 mod realtime_resources;
 mod remote_playback_interface;
 mod rendering_update;
