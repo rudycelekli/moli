@@ -119,6 +119,13 @@ pub(crate) fn start_stylesheet_subresource_fetch(
                 encoded
                     .as_ref()
                     .expect("a local CSS image must have parkable bytes"),
+                crate::network_host::image_response_origin_clean(
+                    &response,
+                    &request_origin,
+                    request_mode,
+                    credentials_mode,
+                    None,
+                ),
             );
             let _ = host.complete_stylesheet_css_image_response(
                 identity,
