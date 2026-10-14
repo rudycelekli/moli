@@ -247,8 +247,6 @@ pub struct LayoutBox<N> {
     pub(crate) style: ResolvedLayoutStyle,
     pub(crate) text: Option<Arc<str>>,
     pub(crate) text_selection: Option<crate::LayoutTextSelection>,
-    /// Shared text/inline layout owned by this formatting-context root.
-    pub(crate) inline_layout: Option<InlineFormattingContext>,
     /// Outermost IFC that consumes this box as a flattened or atomic item.
     pub(crate) inline_context_owner: Option<LayoutBoxId>,
     /// Text, `<br>`, and non-atomic inline boxes are laid out by their owner IFC
@@ -639,6 +637,10 @@ where
     /// Used Grid tracks for actual owners. Their canonical result is frozen
     /// for CSSOM before this pass-local map is released.
     pub(crate) resolved_grid_tracks: HashMap<LayoutBoxId, LayoutResolvedGridTracks>,
+    /// Pass-only IFC scratch indexed by construction/numeric box ID. Keep its
+    /// large empty slots out of persistent box objects. Retention extracts
+    /// only actual owners into the existing sparse working-set storage.
+    pub(crate) inline_layouts: Vec<Option<InlineFormattingContext>>,
     pub(crate) source_mapping: HashMap<N, LayoutBoxId>,
     pub(crate) display_contents_mapping: HashMap<N, Vec<LayoutBoxId>>,
     pub(crate) root: LayoutBoxId,
@@ -670,12 +672,25 @@ where
     N: Copy + Debug + Eq + Hash,
 {
     pub(crate) fn new(root: LayoutBox<N>, root_is_document_element: bool) -> Self {
+        Self::from_construction(vec![root], HashMap::new(), root_is_document_element)
+    }
+
+    /// Installs the unique owned construction graph with fresh pass-local
+    /// environment, viewport and numeric bookkeeping. The graph's vector and
+    /// child allocations are moved, never materialized from comparison records.
+    pub(crate) fn from_construction(
+        boxes: Vec<LayoutBox<N>>,
+        source_mapping: HashMap<N, LayoutBoxId>,
+        root_is_document_element: bool,
+    ) -> Self {
+        let count = boxes.len();
         Self {
-            boxes: vec![root],
+            boxes,
             box_caches: Vec::new(),
             collapsed_table_borders: HashMap::new(),
             resolved_grid_tracks: HashMap::new(),
-            source_mapping: HashMap::new(),
+            source_mapping,
+            inline_layouts: Vec::new(),
             display_contents_mapping: HashMap::new(),
             root: LayoutBoxId::from_index(0),
             root_is_document_element,
@@ -690,7 +705,7 @@ where
             table_cell_percentage_height: None,
             numeric_layout_tracking: false,
             numeric_layout_touched: Vec::new(),
-            numeric_layout_touched_marks: vec![false],
+            numeric_layout_touched_marks: vec![false; count],
         }
     }
 
@@ -728,6 +743,10 @@ where
             slot
         };
         &mut self.box_caches[(slot.get() - 1) as usize]
+    }
+
+    pub(crate) fn prepare_inline_storage(&mut self) {
+        self.inline_layouts.resize_with(self.boxes.len(), || None);
     }
 
     pub fn root(&self) -> LayoutBoxId {
@@ -867,6 +886,9 @@ where
     pub(crate) fn allocate(&mut self, layout_box: LayoutBox<N>) -> LayoutBoxId {
         let id = LayoutBoxId::from_index(self.boxes.len());
         self.boxes.push(layout_box);
+        if !self.inline_layouts.is_empty() {
+            self.inline_layouts.push(None);
+        }
         self.numeric_layout_touched_marks.push(false);
         id
     }
@@ -984,6 +1006,10 @@ where
             }
         }
 
+        // Construction normalization precedes IFC preparation. No prepared
+        // references may be silently remapped by this source-tree compaction.
+        assert!(self.inline_layouts.iter().all(Option::is_none));
+        self.inline_layouts = Vec::new();
         let mut compacted = Vec::with_capacity(next_index);
         for (index, mut layout_box) in self.boxes.drain(..).enumerate() {
             if !reachable[index] {
@@ -1199,6 +1225,15 @@ where
         Ok(())
     }
 
+    pub(crate) fn refresh_box_style(layout_box: &mut LayoutBox<N>, style: ResolvedLayoutStyle) {
+        layout_box.capability_diagnostics = default_capability_diagnostics(
+            layout_box.kind,
+            layout_box.element_semantics.as_ref(),
+            &style,
+        );
+        layout_box.style = style;
+    }
+
     pub(crate) fn new_box(
         source: Option<N>,
         owner: Option<N>,
@@ -1242,7 +1277,6 @@ where
             style,
             text,
             text_selection: None,
-            inline_layout: None,
             inline_context_owner: None,
             inline_flattened: false,
             outside_list_marker: false,
