@@ -2250,6 +2250,7 @@ mod cache_interfaces;
 mod canvas_arguments;
 mod canvas_drawing_state;
 mod canvas_fill_rect;
+mod canvas_gradients;
 mod canvas_hdr_pixels;
 mod canvas_image_proxies;
 mod canvas_paths;
