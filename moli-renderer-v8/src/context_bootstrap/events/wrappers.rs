@@ -173,6 +173,9 @@ pub(crate) fn event_callback_values<'s>(
     .or_else(|| super::super::shared_event_targets::node_target_in_realm(scope, target, context)) else {
         return Some((receiver, event));
     };
+    // Blink wraps native events in the target Window's Context in the
+    // listener's world, while invoking the callback in its relevant Realm.
+    let context = target.get_creation_context(scope)?;
     if world_wrappers::belongs_to_world(scope, event, context) {
         return Some((target.into(), event));
     }
