@@ -63,8 +63,10 @@ pub(super) fn target_in_realm<'s>(
     if let Some(window) = window_target_in_realm(scope, target, context) {
         return window;
     }
-    if let Some(node) = node_target_in_realm(scope, target, context) {
-        return node;
+    if crate::web_api_interfaces::Node::is_instance(scope, target) {
+        return super::platform_object_worlds::in_realm(scope, target.into(), context)
+            .and_then(|value| v8::Local::<v8::Object>::try_from(value).ok())
+            .unwrap_or(target);
     }
     let Some(owner) = get_private_object(scope, target, OWNER) else {
         return target;
@@ -105,35 +107,6 @@ pub(super) fn window_target_in_realm<'s>(
             None
         }
     }
-}
-
-/// Select the listener world's wrapper only for a Node owned by this live
-/// Window. A wrapper's creation Context is not its native ownerDocument:
-/// adoption and borrowed callbacks can make those belong to different Windows.
-pub(super) fn node_target_in_realm<'s>(
-    scope: &mut v8::PinScope<'s, '_>,
-    target: v8::Local<'s, v8::Object>,
-    context: v8::Local<'s, v8::Context>,
-) -> Option<v8::Local<'s, v8::Object>> {
-    if !crate::web_api_interfaces::Node::is_instance(scope, target) {
-        return None;
-    }
-    let (host_ptr, handle) =
-        crate::native_bridge::node_runtime_and_handle_from_object_or_detached(scope, target)
-            .ok()?;
-    if crate::util::context_host_ptr_from_context_slot(context) != Some(host_ptr) {
-        return None;
-    }
-    let host = unsafe { &*host_ptr };
-    let identity = host.window_execution_context_identity_for_access_check(context)?;
-    let owner_scope = host.owner_dispatch_scope_for_node(handle)?;
-    if identity.dispatch_scope() != owner_scope
-        || !host.window_execution_context_identity_is_current(identity)
-    {
-        return None;
-    }
-    super::platform_object_worlds::in_realm(scope, target.into(), context)
-        .and_then(|value| v8::Local::<v8::Object>::try_from(value).ok())
 }
 
 pub(super) fn install_handlers<'s>(
