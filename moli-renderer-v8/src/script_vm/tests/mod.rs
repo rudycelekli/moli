@@ -2198,6 +2198,7 @@ mod midi_owner_interfaces;
 mod mouse_snapshot;
 mod native_bridge_identity;
 mod native_exception_stack_capture;
+mod native_input_validation;
 mod native_node_event_outcomes;
 mod no_cors_header_fill;
 mod node_event_worlds;
