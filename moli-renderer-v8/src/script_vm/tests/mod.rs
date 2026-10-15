@@ -2248,6 +2248,7 @@ mod browser_api;
 mod cache_dictionary_inheritance;
 mod cache_interfaces;
 mod canvas_arguments;
+mod canvas_compositing;
 mod canvas_drawing_state;
 mod canvas_fill_rect;
 mod canvas_gradients;
