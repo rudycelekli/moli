@@ -2486,3 +2486,4 @@ mod svg_transform_lists;
 mod svg_value_lists;
 
 mod path2d_native;
+mod vtt_cue_api;
