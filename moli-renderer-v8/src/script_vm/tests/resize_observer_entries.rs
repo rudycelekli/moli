@@ -246,6 +246,67 @@ async fn resize_observer_finishes_deep_finite_updates_without_a_loop_error() {
 }
 
 #[tokio::test(flavor = "current_thread")]
+async fn resize_observer_finite_skipped_changes_reach_the_next_rendering_turn() {
+    let loader = ResourceRequestClient::new(&moli_fetch::FetchConfig::default()).unwrap();
+    for register_sibling in [false, true] {
+        let mut vm = new_storage_page_task_executor_test_vm("https://resize-next-turn.test/");
+        vm.eval(&format!(
+            r#"
+          globalThis.widths = []; globalThis.errors = [];
+          addEventListener('error', e => errors.push(e.message));
+          const node = document.body.appendChild(document.createElement('div'));
+          node.style.cssText = 'width:50px;height:20px';
+          const sibling = document.body.appendChild(document.createElement('div'));
+          sibling.style.cssText = 'width:70px;height:20px';
+          const observer = new ResizeObserver(entries => {{
+            widths.push(entries[0].contentRect.width);
+            if (widths.length === 1) {{
+              if ({register_sibling}) {{
+                observer.disconnect();
+                const next = new ResizeObserver(entries => {{
+                  widths.push(entries[0].contentRect.width); next.disconnect();
+                }});
+                next.observe(sibling);
+              }} else node.style.width = '60px';
+            }} else observer.disconnect();
+          }});
+          observer.observe(node);
+        "#
+        ))
+        .unwrap();
+        assert!(
+            vm.run_one_rendering_update_executor_turn(&loader)
+                .await
+                .unwrap()
+        );
+        assert_eq!(
+            vm.eval("JSON.stringify([widths,errors.length])").unwrap(),
+            "[[50],1]"
+        );
+        assert!(
+            vm.run_one_rendering_update_executor_turn(&loader)
+                .await
+                .unwrap(),
+            "skipped changes must schedule a later rendering opportunity without external activity"
+        );
+        assert_eq!(
+            vm.eval("JSON.stringify([widths,errors.length])").unwrap(),
+            if register_sibling {
+                "[[50,70],1]"
+            } else {
+                "[[50,60],1]"
+            },
+        );
+        assert!(
+            !vm.run_one_rendering_update_executor_turn(&loader)
+                .await
+                .unwrap(),
+            "finite changes must converge after disconnect"
+        );
+    }
+}
+
+#[tokio::test(flavor = "current_thread")]
 async fn resize_observer_same_depth_feedback_still_reports_a_loop_error() {
     let loader = ResourceRequestClient::new(&moli_fetch::FetchConfig::default()).unwrap();
     let mut vm = new_storage_page_task_executor_test_vm("https://resize-feedback.test/");
@@ -267,6 +328,17 @@ async fn resize_observer_same_depth_feedback_still_reports_a_loop_error() {
     assert_eq!(
         vm.eval("JSON.stringify([deliveries,errors])").unwrap(),
         r#"[1,["ResizeObserver loop completed with undelivered notifications."]]"#
+    );
+    assert!(
+        vm.run_one_rendering_update_executor_turn(&loader)
+            .await
+            .unwrap()
+    );
+    assert_eq!(
+        vm.eval("JSON.stringify([deliveries,errors.length])")
+            .unwrap(),
+        "[2,2]",
+        "ongoing feedback must keep yielding between rendering opportunities"
     );
 }
 

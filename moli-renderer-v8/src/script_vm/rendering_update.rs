@@ -112,12 +112,12 @@ impl ScriptVm {
                 .borrow_mut()
                 .resize_observer_rendering_update_target = previous_target;
             let (undelivered, resume) = broadcast?;
-            if resume {
+            if resume || undelivered {
                 self._context_host
                     .borrow_mut()
                     .queue_resize_observer_rendering_update_for_target(
                         owner.target(),
-                        minimum_depth,
+                        if resume { minimum_depth } else { 0 },
                     );
             }
             if undelivered && !resume {
