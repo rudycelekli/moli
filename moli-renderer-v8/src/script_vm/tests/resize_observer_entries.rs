@@ -307,6 +307,66 @@ async fn resize_observer_finite_skipped_changes_reach_the_next_rendering_turn() 
 }
 
 #[tokio::test(flavor = "current_thread")]
+async fn resize_observer_gathers_all_active_targets_before_callbacks() {
+    let loader = ResourceRequestClient::new(&moli_fetch::FetchConfig::default()).unwrap();
+    for existing_c in [false, true] {
+        let mut vm = new_storage_page_task_executor_test_vm("https://resize-gather.test/");
+        vm.eval(&format!(
+            r#"
+          globalThis.events = []; globalThis.phase = {};
+          addEventListener('error', () => events.push('error'));
+          const [a,b,c] = ['a','b','c'].map(id => {{
+            const node = document.body.appendChild(document.createElement('div'));
+            node.id = id; node.style.cssText = 'width:50px;height:20px'; return node;
+          }});
+          const first = new ResizeObserver(() => {{
+            if (phase === 0) return;
+            events.push('first');
+            if ({existing_c}) c.style.width = '70px'; else second.observe(c);
+            first.disconnect();
+          }});
+          const second = new ResizeObserver(entries => {{
+            if (phase === 0) return;
+            events.push('second:' + entries.map(entry => entry.target.id).join(','));
+            if (entries.some(entry => entry.target === c)) second.disconnect();
+          }});
+          first.observe(a); second.observe(b);
+          if ({existing_c}) second.observe(c);
+        "#,
+            if existing_c { 0 } else { 1 }
+        ))
+        .unwrap();
+        if existing_c {
+            vm.run_one_rendering_update_executor_turn(&loader)
+                .await
+                .unwrap();
+            vm.eval("phase = 1; events = []; a.style.width = '60px'; b.style.width = '60px';")
+                .unwrap();
+            vm.publish_layout_for_test().unwrap();
+        }
+        assert!(
+            vm.run_one_rendering_update_executor_turn(&loader)
+                .await
+                .unwrap()
+        );
+        assert_eq!(
+            vm.eval("JSON.stringify(events)").unwrap(),
+            r#"["first","second:b","error"]"#,
+            "a later observer's current batch must exclude targets activated by an earlier callback"
+        );
+        assert!(
+            vm.run_one_rendering_update_executor_turn(&loader)
+                .await
+                .unwrap()
+        );
+        assert_eq!(
+            vm.eval("JSON.stringify(events)").unwrap(),
+            r#"["first","second:b","error","second:c"]"#
+        );
+    }
+}
+
+#[tokio::test(flavor = "current_thread")]
 async fn resize_observer_same_depth_feedback_still_reports_a_loop_error() {
     let loader = ResourceRequestClient::new(&moli_fetch::FetchConfig::default()).unwrap();
     let mut vm = new_storage_page_task_executor_test_vm("https://resize-feedback.test/");

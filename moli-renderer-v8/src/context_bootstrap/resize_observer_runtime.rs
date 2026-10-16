@@ -253,17 +253,34 @@ fn resize_observer_flush_callback<'s>(
     else {
         return;
     };
-    let _ = deliver_resize_observer(scope, observer, 0);
+    let _ = deliver_resize_observer(scope, observer, 0, None);
 }
 
 fn deliver_resize_observer<'s>(
     scope: &mut v8::PinScope<'s, '_>,
     observer: v8::Local<'s, v8::Object>,
     minimum_depth: usize,
+    gathered_targets: Option<&[v8::Local<'s, v8::Value>]>,
 ) -> (Option<usize>, bool) {
     set_resize_observer_scheduled(scope, observer, false);
     let Some(pending_targets) = resize_observer_pending_targets(scope, observer) else {
         return (None, false);
+    };
+    if pending_targets.length() == 0 {
+        return (None, false);
+    }
+    let pending_targets = if let Some(gathered) = gathered_targets {
+        let pending = (0..pending_targets.length())
+            .filter_map(|index| pending_targets.get_index(scope, index))
+            .collect::<Vec<_>>();
+        let active = gathered.iter().copied().filter(|record| {
+            pending
+                .iter()
+                .any(|candidate| candidate.strict_equals(*record))
+        });
+        serialize_v8_iter_array(scope, active).unwrap_or_else(|| v8::Array::new(scope, 0))
+    } else {
+        pending_targets
     };
     if pending_targets.length() == 0 {
         return (None, false);
@@ -287,7 +304,11 @@ fn deliver_resize_observer<'s>(
     let callback_context = callback.relevant_context(scope);
     let result = {
         let scope = &mut v8::ContextScope::new(scope, callback_context);
-        build_resize_observer_entries_at_depth(scope, pending_targets, minimum_depth)
+        build_resize_observer_entries_at_depth(
+            scope,
+            pending_targets,
+            gathered_targets.is_none().then_some(minimum_depth),
+        )
     };
     let (entries, depth, skipped) = match result {
         Ok(entries) => entries,
@@ -331,15 +352,55 @@ fn build_resize_observer_entries<'s>(
     scope: &mut v8::PinScope<'s, '_>,
     observed_records: v8::Local<'s, v8::Array>,
 ) -> Result<v8::Local<'s, v8::Array>, moli_layout::LayoutError> {
-    build_resize_observer_entries_at_depth(scope, observed_records, 0)
+    build_resize_observer_entries_at_depth(scope, observed_records, Some(0))
         .map(|(entries, _, _)| entries)
 }
 
 fn build_resize_observer_entries_at_depth<'s>(
     scope: &mut v8::PinScope<'s, '_>,
     observed_records: v8::Local<'s, v8::Array>,
-    minimum_depth: usize,
+    minimum_depth: Option<usize>,
 ) -> Result<(v8::Local<'s, v8::Array>, usize, bool), moli_layout::LayoutError> {
+    let measurements = measure_resize_observer_targets(scope, observed_records)?;
+    let mut entries = Vec::new();
+    let mut shallowest = usize::MAX;
+    let mut skipped = false;
+    for measurement in measurements {
+        if let Some(record) = measurement.record {
+            if let Some(minimum_depth) = minimum_depth {
+                if resize_observer_last_reported_size(scope, record)
+                    == Some(measurement.observed_size)
+                {
+                    continue;
+                }
+                if measurement.depth <= minimum_depth {
+                    skipped = true;
+                    continue;
+                }
+            }
+            shallowest = shallowest.min(measurement.depth);
+            set_resize_observer_last_reported_size(scope, record, measurement.observed_size);
+        }
+        entries.push(measurement.entry.into_object(scope));
+    }
+    Ok((
+        serialize_v8_iter_array(scope, entries).unwrap_or_else(|| v8::Array::new(scope, 0)),
+        shallowest,
+        skipped,
+    ))
+}
+
+struct ResizeObserverMeasurement<'s> {
+    record: Option<v8::Local<'s, v8::Object>>,
+    entry: ResizeObserverEntryData<'s>,
+    observed_size: (f64, f64),
+    depth: usize,
+}
+
+fn measure_resize_observer_targets<'s>(
+    scope: &mut v8::PinScope<'s, '_>,
+    observed_records: v8::Local<'s, v8::Array>,
+) -> Result<Vec<ResizeObserverMeasurement<'s>>, moli_layout::LayoutError> {
     struct PendingEntry<'s> {
         record: Option<v8::Local<'s, v8::Object>>,
         target: v8::Local<'s, v8::Value>,
@@ -369,7 +430,7 @@ fn build_resize_observer_entries_at_depth<'s>(
     let mut geometry = std::collections::HashMap::new();
     let mut by_document = std::collections::HashMap::<_, Vec<_>>::new();
     let Some(host_ptr) = context_host_ptr_from_global_bridge(scope) else {
-        return Ok((v8::Array::new(scope, 0), usize::MAX, false));
+        return Ok(Vec::new());
     };
     let runtime = unsafe { &*host_ptr };
     for handle in pending.iter().filter_map(|entry| entry.handle) {
@@ -419,9 +480,7 @@ fn build_resize_observer_entries_at_depth<'s>(
         }
     }
 
-    let mut entries = Vec::new();
-    let mut shallowest = usize::MAX;
-    let mut skipped = false;
+    let mut measurements = Vec::new();
     for entry in pending {
         let (metrics, dpr) = entry
             .handle
@@ -456,39 +515,26 @@ fn build_resize_observer_entries_at_depth<'s>(
             Some(ResizeObserverBoxOptions::DevicePixelContentBox) => device_pixel_content_box_size,
             Some(ResizeObserverBoxOptions::ContentBox) | None => content_box_size,
         };
-        if let Some(record) = entry.record {
-            let previous = resize_observer_last_reported_size(scope, record);
-            if previous == Some(observed_size) {
-                continue;
-            }
-            let mut depth = 0;
-            let mut node = entry.handle;
-            while let Some(handle) = node {
-                depth += 1;
-                node = runtime.dom_host().flat_tree_parent(handle);
-            }
-            if depth <= minimum_depth {
-                skipped = true;
-                continue;
-            }
-            shallowest = shallowest.min(depth);
-            set_resize_observer_last_reported_size(scope, record, observed_size);
+        let mut depth = 0;
+        let mut node = entry.handle;
+        while let Some(handle) = node {
+            depth += 1;
+            node = runtime.dom_host().flat_tree_parent(handle);
         }
-        let entry = ResizeObserverEntryData {
-            target: entry.target,
-            content_rect: rect,
-            content_box_size,
-            border_box_size,
-            device_pixel_content_box_size,
-        }
-        .into_object(scope);
-        entries.push(entry);
+        measurements.push(ResizeObserverMeasurement {
+            record: entry.record,
+            entry: ResizeObserverEntryData {
+                target: entry.target,
+                content_rect: rect,
+                content_box_size,
+                border_box_size,
+                device_pixel_content_box_size,
+            },
+            observed_size,
+            depth,
+        });
     }
-    Ok((
-        serialize_v8_iter_array(scope, entries).unwrap_or_else(|| v8::Array::new(scope, 0)),
-        shallowest,
-        skipped,
-    ))
+    Ok(measurements)
 }
 
 fn build_observed_record<'s>(
@@ -834,14 +880,42 @@ pub(crate) fn broadcast_resize_observer_rendering_update(
         .collect::<Vec<_>>();
     let mut shallowest = None;
     let mut skipped = false;
+    let mut gathered = Vec::new();
     for observer in observers {
         if let Some(targets) = resize_observer_targets(scope, observer) {
-            set_resize_observer_pending_targets(scope, observer, targets);
-            let (depth, did_skip) = deliver_resize_observer(scope, observer, minimum_depth);
-            skipped |= did_skip;
-            if let Some(depth) = depth {
-                shallowest = Some(shallowest.map_or(depth, |old: usize| old.min(depth)));
+            let measurements = match measure_resize_observer_targets(scope, targets) {
+                Ok(measurements) => measurements,
+                Err(error) => {
+                    throw_resize_observer_layout_error(scope, error);
+                    continue;
+                }
+            };
+            let mut active = Vec::new();
+            for measurement in measurements {
+                let Some(record) = measurement.record else {
+                    continue;
+                };
+                if resize_observer_last_reported_size(scope, record)
+                    == Some(measurement.observed_size)
+                {
+                    continue;
+                }
+                if measurement.depth > minimum_depth {
+                    active.push(record.into());
+                } else {
+                    skipped = true;
+                }
             }
+            let pending = serialize_v8_iter_array(scope, active.iter().copied())
+                .unwrap_or_else(|| v8::Array::new(scope, 0));
+            set_resize_observer_pending_targets(scope, observer, pending);
+            gathered.push((observer, active));
+        }
+    }
+    for (observer, active) in gathered {
+        let (depth, _) = deliver_resize_observer(scope, observer, minimum_depth, Some(&active));
+        if let Some(depth) = depth {
+            shallowest = Some(shallowest.map_or(depth, |old: usize| old.min(depth)));
         }
     }
     (shallowest, skipped)
