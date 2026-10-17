@@ -314,10 +314,12 @@ where
             box_count = world.len(),
             cache_count = world.box_caches.len(),
             cache_capacity = world.box_caches.capacity(),
-            box_index_slots = world.box_cache_slots.len(),
+            box_index_slots = world.len(),
+            // These fields belong to the box allocation, not a separate index.
+            embedded_index_field_bytes = world.boxes.capacity()
+                * std::mem::size_of::<Option<std::num::NonZeroU32>>(),
             estimated_cache_bytes = world.box_caches.capacity()
-                * std::mem::size_of::<taffy::Cache>()
-                + world.box_cache_slots.capacity() * std::mem::size_of::<usize>(),
+                * std::mem::size_of::<taffy::Cache>(),
         );
     }
     let phase_started = Instant::now();

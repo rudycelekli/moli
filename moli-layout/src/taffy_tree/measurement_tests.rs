@@ -467,7 +467,7 @@ fn numeric_cache_allocation_follows_actual_stores_in_a_large_flattened_tree() {
     );
     assert_eq!(world.cache_get(sibling.to_taffy(), &input), Some(output));
     let bytes = world.box_caches.capacity() * std::mem::size_of::<taffy::Cache>()
-        + world.box_cache_slots.capacity() * std::mem::size_of::<usize>();
+        + world.boxes.capacity() * std::mem::size_of::<Option<std::num::NonZeroU32>>();
     eprintln!(
         "numeric-cache boxes={} initialized={} allocated_slots={} visible_capacity_bytes={bytes}",
         world.len(),
@@ -496,5 +496,9 @@ fn numeric_hidden_cache_store_does_not_allocate_measurement_storage() {
     world.cache_store(world.root().to_taffy(), &input, output);
     assert_eq!(world.cache_get(world.root().to_taffy(), &input), None);
     assert_eq!(world.box_caches.capacity(), 0);
-    assert_eq!(world.box_cache_slots.capacity(), 0);
+    assert!((0..world.len()).all(|index| {
+        world
+            .numeric_cache(LayoutBoxId::from_index(index))
+            .is_none()
+    }));
 }

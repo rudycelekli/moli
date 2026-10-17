@@ -204,6 +204,12 @@ impl JsContextHost {
         &self,
         frames: impl IntoIterator<Item = DomHandle>,
     ) {
+        // Realtime source invalidation already makes the screen layout stale.
+        // Preserve the last used viewport for a connected, hidden child until
+        // its next layout publishes a replacement.
+        if self.layout_policy().is_realtime() {
+            return;
+        }
         let frames = frames.into_iter().collect::<Vec<_>>();
         if frames.is_empty() {
             return;

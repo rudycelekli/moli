@@ -86,6 +86,7 @@ where
                 // Retain construction ownership, not derived numeric results
                 // or paint resources. Clearing a length would still pin its
                 // backing allocation, so release pass-local containers here.
+                layout_box.clear_numeric_cache_slot();
                 layout_box.layout_parent = None;
                 layout_box.layout_children = Vec::new();
                 layout_box.positioned_containing_block = None;

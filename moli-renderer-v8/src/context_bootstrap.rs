@@ -284,11 +284,10 @@ pub(crate) use self::events::{
     construct_original_message_event, event_attribute, event_backing, event_bool_attribute,
     event_initialized, event_internal_bool_flag, event_is_dispatching, event_is_error_event,
     event_is_mouse_event, event_private_value, initialize_event_object, initialize_event_wrapper,
-    initialize_native_security_policy_violation_event,
-    mark_agent_submit_event, mark_event_trusted, new_event_state, new_event_wrapper,
-    node_event_callback_values, set_event_composed_path, set_event_internal_flag,
-    set_event_private_value, set_event_trusted, submit_event_submitter_value,
-    window_event_callback_values,
+    initialize_native_security_policy_violation_event, mark_agent_submit_event, mark_event_trusted,
+    new_event_state, new_event_wrapper, node_event_callback_values, set_event_composed_path,
+    set_event_internal_flag, set_event_private_value, set_event_trusted,
+    submit_event_submitter_value, window_event_callback_values,
 };
 pub(crate) use self::file_api::{
     DataTransferStringCallbackTask, DataTransferStringCallbackTaskEffect,
@@ -344,8 +343,8 @@ pub(crate) use self::location_runtime::{
 pub(crate) use self::media_cues::set_text_track_cue_track;
 pub(crate) use self::media_queries::{
     SimpleObjectEventListenerInspectorSnapshot, SimpleObjectEventListenerSnapshot,
-    dispatch_media_query_list_change_events, dispatch_realtime_media_query_event, take_realtime_media_query_events, dispatch_simple_event_target_event,
-    dispatch_simple_event_target_event_collecting_errors,
+    dispatch_media_query_list_change_events, dispatch_realtime_media_query_event,
+    dispatch_simple_event_target_event, dispatch_simple_event_target_event_collecting_errors,
     evaluate_match_media_query_list_with_viewport, initialize_simple_event_target,
     install_simple_event_target_handlers, install_simple_event_target_methods,
     invoke_simple_event_listener, is_simple_event_target,
@@ -355,6 +354,7 @@ pub(crate) use self::media_queries::{
     simple_event_target_remove_event_listener_callback, simple_object_event_listeners_snapshot,
     simple_object_event_set_handler, simple_object_event_target_add_listener,
     simple_object_event_target_remove_listener, simple_object_has_event_listeners,
+    take_realtime_media_query_events,
 };
 pub(crate) use self::message_ports::{
     MessagePortDeliveryRunResult, MessagePortRealmBinding, detach_message_port_owner_for_transfer,
