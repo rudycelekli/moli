@@ -136,3 +136,21 @@ fn auto_grid_tracks_honor_intrinsic_item_minima_before_measuring_row_height() ->
     }
     Ok(())
 }
+
+#[test]
+fn inline_block_intrinsic_maximum_constrains_auto_width_and_preserves_minimum_sizing() -> Result<()>
+{
+    let html = probe_font_document(
+        "<section><span id='maximum' style='display:inline-block;max-width:min-content'>aaaa bbbbb ccc</span></section><section><span id='minimum' style='display:inline-block;min-width:min-content;width:0'>aaaa bbbbb ccc</span></section><section><span id='auto-minimum' style='display:inline-block;min-width:min-content'>aaaa bbbbb ccc</span></section><section><span id='minimum-wins' style='display:inline-block;min-width:max-content;max-width:min-content'>aaaa bbbbb ccc</span></section>",
+    );
+    let value = run_layout(&html, GEOMETRY, true)?;
+    for id in ["maximum", "minimum"] {
+        assert_dimension(&value, id, "width", 60.0);
+        assert_dimension(&value, id, "height", 60.0);
+    }
+    for id in ["auto-minimum", "minimum-wins"] {
+        assert_dimension(&value, id, "width", 168.0);
+        assert_dimension(&value, id, "height", 20.0);
+    }
+    Ok(())
+}
