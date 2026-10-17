@@ -117,7 +117,7 @@ stylo_dom = { git = "https://github.com/lexmount/stylo", rev = "0c7e8baf63b6714e
 stylo_static_prefs = { git = "https://github.com/lexmount/stylo", rev = "0c7e8baf63b6714e7614834fadbc09710f3c3d27" }
 stylo_traits = { git = "https://github.com/lexmount/stylo", rev = "0c7e8baf63b6714e7614834fadbc09710f3c3d27" }
 svgtypes = { git = "https://github.com/lexmount/svgtypes", branch = "moli" }
-taffy = { git = "https://github.com/ldm0/taffy", rev = "2b54aa97792a13a6a962202422a80c7385012935" }
+taffy = { git = "https://github.com/ldm0/taffy", rev = "5453d6cdda8d2dd12b87e5237686e0adaf7cc0bc" }
 
 [workspace.lints.clippy]
 disallowed_methods = "deny"
