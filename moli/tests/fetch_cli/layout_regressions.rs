@@ -154,3 +154,33 @@ fn inline_block_intrinsic_maximum_constrains_auto_width_and_preserves_minimum_si
     }
     Ok(())
 }
+
+#[test]
+fn flex_percentage_padding_keeps_the_text_content_width_before_line_breaking() -> Result<()> {
+    let mut body = String::new();
+    for width in [240, 300, 400] {
+        for padding in [0, 5, 10, 20] {
+            for sizing in ["content-box", "border-box"] {
+                body.push_str(&format!(
+                    "<section><div style='display:flex;width:{width}px'><div id='item-{width}-{padding}-{sizing}' style='padding:0 {padding}%;box-sizing:{sizing}'>aaa bbb ccc</div></div></section>"
+                ));
+            }
+        }
+    }
+    let value = run_layout(&probe_font_document(&body), GEOMETRY, true)?;
+    for width in [240, 300, 400] {
+        for padding in [0, 5, 10, 20] {
+            for sizing in ["content-box", "border-box"] {
+                let id = format!("item-{width}-{padding}-{sizing}");
+                assert_dimension(
+                    &value,
+                    &id,
+                    "width",
+                    132.0 + 2.0 * f64::from(width * padding) / 100.0,
+                );
+                assert_dimension(&value, &id, "height", 20.0);
+            }
+        }
+    }
+    Ok(())
+}
