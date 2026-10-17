@@ -66,3 +66,73 @@ fn fractional_grid_track_limits_terminate_with_a_finite_item_width() -> Result<(
     assert!((width - 202.44017).abs() < 0.05, "{width}");
     Ok(())
 }
+
+fn probe_font_document(body: &str) -> String {
+    let font = STANDARD.encode(include_bytes!(concat!(
+        env!("CARGO_MANIFEST_DIR"),
+        "/../moli-layout/tests/fixtures/moli-ahem.woff2"
+    )));
+    format!(
+        "<!doctype html><style>@font-face{{font-family:Probe;src:url(data:font/woff2;base64,{font})}}body{{margin:0;font:20px/20px Probe}}</style>{body}"
+    )
+}
+
+const GEOMETRY: &str = r#"(async () => {
+    await document.fonts.ready;
+    return Object.fromEntries([...document.querySelectorAll('[id]')].map(element => {
+        const rect = element.getBoundingClientRect();
+        return [element.id, {x: rect.x, width: rect.width, height: rect.height}];
+    }));
+})()"#;
+
+fn assert_dimension(value: &Value, id: &str, dimension: &str, expected: f64) {
+    let actual = value[id][dimension]
+        .as_f64()
+        .expect("dimension must be numeric");
+    assert!(
+        (actual - expected).abs() < 0.05,
+        "{id}.{dimension}: {actual} != {expected}"
+    );
+}
+
+#[test]
+fn auto_grid_tracks_honor_intrinsic_item_minima_before_measuring_row_height() -> Result<()> {
+    let mut body = String::new();
+    for keyword in ["min-content", "max-content"] {
+        for width in ["auto", "0px", "50px"] {
+            let key = format!("{keyword}-{width}");
+            let grid_width = if keyword == "min-content" { 140 } else { 200 };
+            body.push_str(&format!(
+                "<section><div id='grid-{key}' style='display:grid;grid-template-columns:auto 100px;width:{grid_width}px'><div id='item-{key}' style='min-width:{keyword};width:{width}'>aaaa bbbbb ccc</div><div id='next-{key}'></div></div></section>"
+            ));
+        }
+    }
+    let value = run_layout(&probe_font_document(&body), GEOMETRY, true)?;
+    for keyword in ["min-content", "max-content"] {
+        for width in ["auto", "0px", "50px"] {
+            let key = format!("{keyword}-{width}");
+            let maximum = keyword == "max-content";
+            let item_width = if maximum { 168.0 } else { 60.0 };
+            assert_dimension(&value, &format!("item-{key}"), "width", item_width);
+            assert_dimension(
+                &value,
+                &format!("item-{key}"),
+                "height",
+                if maximum { 20.0 } else { 60.0 },
+            );
+            assert_dimension(
+                &value,
+                &format!("grid-{key}"),
+                "height",
+                if maximum { 20.0 } else { 60.0 },
+            );
+            assert_dimension(
+                &value,
+                &format!("next-{key}"),
+                "x",
+                if maximum { 168.0 } else { 60.0 },
+            );
+        }
+    }
+    Ok(())
+}
