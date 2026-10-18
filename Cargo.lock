@@ -2887,6 +2887,7 @@ dependencies = [
  "parking_lot",
  "rcgen",
  "serde",
+ "serde_json",
  "strum",
  "tokio",
  "tokio-rustls",
