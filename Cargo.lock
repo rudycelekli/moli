@@ -5648,7 +5648,7 @@ dependencies = [
 [[package]]
 name = "taffy"
 version = "0.15.0"
-source = "git+https://github.com/ldm0/taffy?rev=e2ce07300697a9d8196117cd343e7b158ae5320d#e2ce07300697a9d8196117cd343e7b158ae5320d"
+source = "git+https://github.com/ldm0/taffy?rev=eb97b9cc386746c1ba870aa249f4ae5119dfffb4#eb97b9cc386746c1ba870aa249f4ae5119dfffb4"
 dependencies = [
  "serde",
  "slotmap",

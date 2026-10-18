@@ -754,12 +754,14 @@ impl TableContext {
         inline_insets: f32,
     ) -> f32 {
         let space = inputs.constraint_space(self.writing_mode);
-        let (min_content, max_content) =
-            if space.sizing_purpose == SizingPurpose::IntrinsicContribution {
-                (intrinsic.min_content, intrinsic.max_content)
-            } else {
-                (grid.min, grid.max)
-            };
+        let (min_content, max_content) = if matches!(
+            space.sizing_purpose,
+            SizingPurpose::IntrinsicContribution | SizingPurpose::ContentProbe
+        ) {
+            (intrinsic.min_content, intrinsic.max_content)
+        } else {
+            (grid.min, grid.max)
+        };
         let available = space.available_size.inline_size;
         let fit_content = || match available {
             AvailableSpace::Definite(value) => min_content.max(value.max(0.0).min(max_content)),
