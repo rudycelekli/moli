@@ -214,3 +214,50 @@ fn intrinsic_width_keywords_keep_margin_space_for_float_and_inline_roles() -> Re
     }
     Ok(())
 }
+
+#[test]
+fn intrinsic_width_parent_keeps_float_grid_constraints_in_vertical_writing_modes() -> Result<()> {
+    let mut body = String::from("<!doctype html><body>");
+    for mode in ["horizontal-tb", "vertical-rl", "vertical-lr"] {
+        for keyword in ["min-content", "max-content"] {
+            body.push_str(&format!("<section style='writing-mode:{mode}'><div style='width:{keyword};height:{keyword}'><div id='grid-{mode}-{keyword}' style='display:grid;float:left;grid-template-columns:minmax(100px,200px);grid-template-rows:minmax(50px,100px)'></div></div></section>"));
+        }
+    }
+    let value = run_layout(&body, GEOMETRY, false)?;
+    for mode in ["horizontal-tb", "vertical-rl", "vertical-lr"] {
+        for (keyword, width) in [("min-content", 100.0), ("max-content", 200.0)] {
+            let id = format!("grid-{mode}-{keyword}");
+            assert_dimension(&value, &id, "width", width);
+            assert_dimension(&value, &id, "height", 100.0);
+        }
+    }
+    Ok(())
+}
+
+#[test]
+fn wrapped_vertical_flex_keeps_padding_in_its_scroll_extent() -> Result<()> {
+    let mut body = String::from("<!doctype html><body>");
+    for mode in ["vertical-rl", "vertical-lr"] {
+        for wrap in ["wrap", "wrap-reverse"] {
+            for padding in [0, 10] {
+                body.push_str(&format!("<div id='flex-{mode}-{wrap}-{padding}' data-flex-probe style='display:inline-flex;writing-mode:{mode};direction:rtl;flex-flow:column {wrap};width:100px;height:100px;overflow:scroll;border:3px solid;padding:{padding}px;gap:10px;align-items:start'>"));
+                for _ in 0..3 {
+                    body.push_str("<div style='min-width:110px;min-height:110px'></div>");
+                }
+                body.push_str("</div>");
+            }
+        }
+    }
+    let expression = r#"JSON.stringify(Object.fromEntries([...document.querySelectorAll('[data-flex-probe]')].map(e => [e.id, {width:e.scrollWidth,height:e.scrollHeight}])))"#;
+    let value = run_layout(&body, expression, false)?;
+    for mode in ["vertical-rl", "vertical-lr"] {
+        for wrap in ["wrap", "wrap-reverse"] {
+            for padding in [0, 10] {
+                let id = format!("flex-{mode}-{wrap}-{padding}");
+                assert_dimension(&value, &id, "width", 110.0 + f64::from(2 * padding));
+                assert_dimension(&value, &id, "height", 350.0 + f64::from(2 * padding));
+            }
+        }
+    }
+    Ok(())
+}
