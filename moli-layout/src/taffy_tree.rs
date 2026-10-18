@@ -2915,10 +2915,20 @@ where
                     // All floats receive the space remaining after horizontal
                     // margins, matching Taffy's block-float parent. Replaced
                     // measurement carries this ownership explicitly.
+                    let available_width = if style.size.width.is_min_content() {
+                        AvailableSpace::MinContent
+                    } else if style.size.width.is_max_content() {
+                        AvailableSpace::MaxContent
+                    } else {
+                        child_inputs
+                            .available_space
+                            .width
+                            .maybe_sub(margin.left + margin.right)
+                    };
                     let layout_inputs = LayoutInput {
                         available_space: child_inputs
                             .available_space
-                            .map_width(|width| width.maybe_sub(margin.left + margin.right)),
+                            .map_width(|_| available_width),
                         ..child_inputs
                     };
                     let output = self.compute_child_layout(child.to_taffy(), layout_inputs);

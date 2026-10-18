@@ -184,3 +184,33 @@ fn flex_percentage_padding_keeps_the_text_content_width_before_line_breaking() -
     }
     Ok(())
 }
+
+#[test]
+fn intrinsic_width_keywords_keep_margin_space_for_float_and_inline_roles() -> Result<()> {
+    let mut body = String::new();
+    for role in ["float", "inline"] {
+        for (keyword, _) in [
+            ("min-content", 46.0),
+            ("fit-content", 70.0),
+            ("max-content", 94.0),
+        ] {
+            let display = if role == "float" {
+                "float:left"
+            } else {
+                "display:inline-block"
+            };
+            body.push_str(&format!("<section style='width:80px;height:100px'><div id='{role}-{keyword}' style='{display};width:{keyword};margin:5px;padding:2px;border:3px solid'>aaa bbb</div><br></section>"));
+        }
+    }
+    let value = run_layout(&probe_font_document(&body), GEOMETRY, true)?;
+    for role in ["float", "inline"] {
+        for (keyword, width) in [
+            ("min-content", 46.0),
+            ("fit-content", 70.0),
+            ("max-content", 94.0),
+        ] {
+            assert_dimension(&value, &format!("{role}-{keyword}"), "width", width);
+        }
+    }
+    Ok(())
+}

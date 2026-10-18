@@ -81,7 +81,7 @@ where
         let preferred_width = layout_box.style.taffy.size.width;
         let is_replaced = layout_box.is_replaced();
         let uses_fit_content = !layout_box.is_replaced()
-            && layout_box.style.taffy.size.width.is_auto()
+            && (preferred_width.is_auto() || preferred_width.is_fit_content())
             && matches!(
                 layout_box.style.display(),
                 LayoutDisplay::InlineBlock
