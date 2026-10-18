@@ -13,7 +13,7 @@ impl ScriptVm {
         response_filter: Option<AsyncSubresourceFetchResponseFilter>,
         network_error_text: Option<String>,
         result: std::result::Result<crate::protocol_types::NavigationResponse, String>,
-    ) -> Result<()> {
+    ) -> Result<AsyncSubresourceFetchBodyActivity> {
         let detached_window_fetch = pending.continuation.is_detached_window_fetch();
         debug_assert!(
             detached_window_fetch || pending.execution_context.is_window_network_only(),
@@ -27,6 +27,7 @@ impl ScriptVm {
             || matches!(
                 pending.continuation,
                 PendingSubresourceContinuation::Dictionary(_)
+                    | PendingSubresourceContinuation::ResponsePreload(_)
             ) {
             result.and_then(|response| {
                 if !response.redirect_chain.is_empty()
@@ -60,6 +61,12 @@ impl ScriptVm {
             result
         };
 
+        let activity = self.complete_response_preload(
+            &mut pending,
+            response_filter.as_ref(),
+            skip_fetch_security_validation,
+            &result,
+        )?;
         match result {
             Ok(response) => {
                 let network_request_headers = response
@@ -128,9 +135,9 @@ impl ScriptVm {
             detached_owner = ?pending.execution_context.detached_window_fetch_identity(),
             accepted_context = ?pending.execution_context.window_network_only_identity(),
             accepted_document = ?pending.execution_context.window_document_network_only_identity(),
-            "completed network-only subresource without entering V8"
+            "completed network-only subresource"
         );
-        Ok(())
+        Ok(activity)
     }
     #[allow(clippy::too_many_arguments)]
     pub(super) fn resolve_pending_event_source_fetch(
@@ -445,20 +452,18 @@ impl ScriptVm {
         if pending.continuation.is_detached_window_fetch()
             || pending.execution_context.is_window_network_only()
         {
-            return self
-                .resolve_network_only_subresource_fetch(
-                    pending,
-                    request_url,
-                    request_method,
-                    request_headers,
-                    request_body,
-                    response_status_text,
-                    skip_fetch_security_validation,
-                    response_filter,
-                    network_error_text,
-                    result,
-                )
-                .map(|()| AsyncSubresourceFetchBodyActivity::NoWindowRealmEntered);
+            return self.resolve_network_only_subresource_fetch(
+                pending,
+                request_url,
+                request_method,
+                request_headers,
+                request_body,
+                response_status_text,
+                skip_fetch_security_validation,
+                response_filter,
+                network_error_text,
+                result,
+            );
         }
         if !window_subresource_owner_is_current(&self._context_host, &pending) {
             tracing::debug!(
@@ -887,6 +892,7 @@ impl ScriptVm {
                             apply_stylesheet_subresource_terminal(&context_host, binding);
                         }
                         PendingSubresourceContinuation::Dictionary(_)
+                        | PendingSubresourceContinuation::ResponsePreload(_)
                         | PendingSubresourceContinuation::Beacon
                         | PendingSubresourceContinuation::CspReport { .. }
                         | PendingSubresourceContinuation::EventSource(_)
@@ -1028,6 +1034,7 @@ impl ScriptVm {
                             apply_stylesheet_subresource_terminal(&context_host, binding);
                         }
                         PendingSubresourceContinuation::Dictionary(_)
+                        | PendingSubresourceContinuation::ResponsePreload(_)
                         | PendingSubresourceContinuation::Beacon
                         | PendingSubresourceContinuation::CspReport { .. }
                         | PendingSubresourceContinuation::EventSource(_)

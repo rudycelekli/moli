@@ -2168,6 +2168,7 @@ pub(in crate::worker) fn resolve_worker_fetch_input<'s>(
             integrity: init.integrity.unwrap_or(inherited.integrity),
             keepalive: init.keepalive.unwrap_or(inherited.keepalive),
             use_cors_preflight: false,
+            link_preload: false,
         };
         (
             url,
@@ -2211,6 +2212,7 @@ pub(in crate::worker) fn resolve_worker_fetch_input<'s>(
             integrity: init.integrity.unwrap_or_default(),
             keepalive: init.keepalive.unwrap_or(false),
             use_cors_preflight: false,
+            link_preload: false,
         };
         (
             url,
