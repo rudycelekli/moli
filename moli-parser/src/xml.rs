@@ -83,6 +83,7 @@ impl XmlParser {
         present_unstyled_xml: bool,
     ) -> NativeDom {
         let sink = XmlDocumentSink::new(XmlLiveTreeSinkTarget::new_owned(final_url));
+        sink.note_lexical_errors(&xml);
         let mut parser = parse_xml_document(sink, XmlParseOpts::default());
         for chunk in html_chunks(&xml) {
             parser.process(XmlStrTendril::from(chunk));
@@ -108,6 +109,7 @@ impl XmlParser {
     ) -> Option<()> {
         let target = XmlLiveTreeSinkTarget::new_borrowed(dom_host, document_handle)?;
         let sink = XmlDocumentSink::new(target);
+        sink.note_lexical_errors(xml);
         let mut parser = parse_xml_document(sink, XmlParseOpts::default());
         for chunk in html_chunks(xml) {
             parser.process(XmlStrTendril::from(chunk));
@@ -135,6 +137,15 @@ impl PartialEq for XmlParseHandle {
 impl Eq for XmlParseHandle {}
 
 impl<'a> XmlDocumentSink<'a> {
+    fn note_lexical_errors(&self, source: &str) {
+        // xml5ever recovers from HTML-like attributes and accepts invalid XML
+        // names. Keep that tree construction, but surface strict XML grammar
+        // errors to DOMParser and inert-document callers.
+        if let Some(error) = xmlparser::Tokenizer::from(source).find_map(Result::err) {
+            self.parse_error(Cow::Owned(error.to_string()));
+        }
+    }
+
     fn new(target: XmlLiveTreeSinkTarget<'a>) -> Self {
         Self {
             target: RefCell::new(target),
@@ -600,6 +611,38 @@ mod tests {
     use super::XmlParser;
     use moli_dom::native::{DomHost, NativeDom, NativeNodeId, Node, NodeType};
     use url::Url;
+
+    #[test]
+    fn xml_parser_rejects_malformed_attributes_without_rejecting_distinct_namespaces() {
+        let prologue = "<html xmlns='http://www.w3.org/1999/xhtml' xml:lang='en' lang='en'><body>";
+        for fragment in [
+            "<span novalue/>",
+            "<span =\"noattr\"/>",
+            "<span xmlns:='urn:test'/>",
+            "<span data-test=testing/>",
+            "<8:test xmlns:8='urn:test'/>",
+            "<span xmlns:p1 xmlns:p2='urn:test'/>",
+        ] {
+            for source in [
+                fragment.to_owned(),
+                format!("{prologue}{fragment}</body></html>"),
+            ] {
+                let dom = XmlParser.parse(
+                    Url::parse("https://xml.test/malformed.xml").unwrap(),
+                    source.clone(),
+                );
+                assert!(
+                    !dom.parse_errors().is_empty(),
+                    "{source} must report malformed XML"
+                );
+            }
+        }
+        let valid = format!(
+            "{prologue}<span data-test='testing' xmlns:p='urn:test' p:attr='x'/></body></html>"
+        );
+        let dom = XmlParser.parse(Url::parse("https://xml.test/valid.xml").unwrap(), valid);
+        assert!(dom.parse_errors().is_empty(), "{:?}", dom.parse_errors());
+    }
 
     #[test]
     fn xml_numeric_references_follow_xml_chars_without_html_replacements() {
