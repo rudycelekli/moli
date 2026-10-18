@@ -2565,8 +2565,10 @@ where
                     let display = self.boxes[parent.index()].style.display();
                     display.is_flex_container() || display.is_grid_container()
                 });
-        let is_intrinsic_contribution =
-            inputs.sizing_purpose == SizingPurpose::IntrinsicContribution;
+        let is_intrinsic_contribution = matches!(
+            inputs.sizing_purpose,
+            SizingPurpose::IntrinsicContribution | SizingPurpose::ContentProbe
+        );
         let shrink_to_fit = !has_definite_width
             && (is_floated
                 // A content-based block parent can probe this IFC with a
