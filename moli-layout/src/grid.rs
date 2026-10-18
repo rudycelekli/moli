@@ -8,7 +8,7 @@ use crate::{
 
 pub(crate) fn project_resolved_grid_tracks(
     style: &taffy::Style<Atom>,
-    detailed: taffy::DetailedGridInfo,
+    detailed: taffy::DetailedGridInfo<Atom>,
 ) -> Option<LayoutResolvedGridTracks> {
     let row_line_names = expanded_line_names(
         &style.grid_template_rows,
@@ -29,22 +29,21 @@ pub(crate) fn project_resolved_grid_tracks(
 }
 
 fn project_tracks(
-    tracks: taffy::DetailedGridTracksInfo,
+    tracks: taffy::DetailedGridTracksInfo<Atom>,
     explicit_line_names: Vec<Vec<Atom>>,
 ) -> Option<LayoutResolvedGridTrackList> {
     let track_count = usize::from(tracks.negative_implicit_tracks)
         .checked_add(usize::from(tracks.explicit_tracks))?
         .checked_add(usize::from(tracks.positive_implicit_tracks))?;
-    if tracks.sizes.len() != track_count
-        || tracks.gutters.len() != track_count.saturating_add(1)
+    if tracks.positions.len() != track_count
         || explicit_line_names.len() != usize::from(tracks.explicit_tracks).saturating_add(1)
     {
         return None;
     }
     let used_track_sizes = tracks
-        .sizes
+        .positions
         .into_iter()
-        .map(to_blink_layout_unit)
+        .map(|position| to_blink_layout_unit(position.end - position.start))
         .collect::<Option<Vec<_>>>()?;
     Some(LayoutResolvedGridTrackList {
         negative_implicit_track_count: usize::from(tracks.negative_implicit_tracks),

@@ -17,8 +17,8 @@ use style::{
     properties::ComputedValues,
     values::{
         computed::font::{
-            FontFeatureSettings, FontStretch, FontStyle as StyloFontStyle, FontSynthesis,
-            FontVariationSettings, GenericFontFamily, SingleFontFamily,
+            FontFeatureSettings, FontStyle as StyloFontStyle, FontSynthesis, FontVariationSettings,
+            FontWidth as StyloFontWidth, GenericFontFamily, SingleFontFamily,
         },
         computed::{
             Length, OverflowWrap as StyloOverflowWrap, TextDecorationLine,
@@ -186,7 +186,7 @@ pub(crate) fn text_style(computed: &ComputedValues) -> TextStyle<'static, 'stati
         },
         font_family: FontFamily::List(Cow::Owned(families)),
         font_size,
-        font_width: font_width(font.font_stretch),
+        font_width: font_width(font.font_width),
         font_style: font_style(font.font_style),
         font_weight: FontWeight::new(font.font_weight.value()),
         font_variations: FontVariations::List(Cow::Owned(variations)),
@@ -231,7 +231,7 @@ pub(crate) fn text_style(computed: &ComputedValues) -> TextStyle<'static, 'stati
 fn font_family_name(family: &SingleFontFamily) -> FontFamilyName<'static> {
     match family {
         SingleFontFamily::FamilyName(name) => {
-            let name = name.name.as_ref();
+            let name: &str = name.name.as_ref();
             #[cfg(target_vendor = "apple")]
             if name == "-apple-system" {
                 return FontFamilyName::Generic(GenericFamily::SystemUi);
@@ -267,7 +267,7 @@ fn generic_font_family(family: GenericFontFamily) -> GenericFamily {
     }
 }
 
-fn font_width(stretch: FontStretch) -> FontWidth {
+fn font_width(stretch: StyloFontWidth) -> FontWidth {
     FontWidth::from_percentage(stretch.0.to_float())
 }
 

@@ -330,11 +330,11 @@ where
         local_scrollport.y,
         local_scrollport
             .width
-            .max(layout.content_size.width)
+            .max(layout.scrollable_overflow_rect.right)
             .max(0.0),
         local_scrollport
             .height
-            .max(layout.content_size.height)
+            .max(layout.scrollable_overflow_rect.bottom)
             .max(0.0),
     );
     if is_root {

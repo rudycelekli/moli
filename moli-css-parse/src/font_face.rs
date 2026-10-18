@@ -1,12 +1,12 @@
-use cssparser::{Parser, ParserInput, Token};
+use cssparser::{Parser, Token};
 
 use crate::unquote_css_string;
 
 pub use style::moli_font_face::{CssFontFace, normalize_font_face_src, parse_font_faces};
 
 pub fn font_load_query_contains_css_wide_keyword(query: &str) -> bool {
-    let mut input = ParserInput::new(query);
-    let mut input = Parser::new(&mut input);
+    let input = query;
+    let mut input = Parser::new(input);
     while let Ok(token) = input.next() {
         match token {
             Token::Ident(value)
@@ -26,8 +26,8 @@ pub fn font_load_query_is_valid(query: &str) -> bool {
     // Servo's Stylo configuration does not parse system fonts. Their entire
     // shorthand syntax is one of these six identifiers; use CSS tokens so
     // escapes, comments and case folding work without accepting trailing input.
-    let mut input = ParserInput::new(query);
-    let mut parser = Parser::new(&mut input);
+    let input = query;
+    let mut parser = Parser::new(input);
     if let Ok(name) = parser.expect_ident_cloned()
         && matches!(
             name.to_ascii_lowercase().as_str(),

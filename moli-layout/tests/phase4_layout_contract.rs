@@ -332,8 +332,8 @@ fn padded_intrinsic_items_measure_wrapping_in_content_box_space() {
             style(LayoutDisplay::Block, YELLOW)
                 .tap_taffy(|taffy| {
                     taffy.size.width = Dimension::max_content();
-                    taffy.min_size.width = Dimension::min_content();
-                    taffy.max_size.width = Dimension::percent(1.0);
+                    taffy.min_size.width = Dimension::min_content().into();
+                    taffy.max_size.width = Dimension::percent(1.0).into();
                     taffy.box_sizing = BoxSizing::ContentBox;
                     taffy.justify_self = Some(taffy::AlignSelf::START);
                     taffy.flex_shrink = 0.0;
@@ -421,8 +421,8 @@ fn assert_grid_intrinsic_item_contributes_constrained_height(min_width: Dimensio
         style(LayoutDisplay::Block, PaintColor::TRANSPARENT)
             .tap_taffy(|taffy| {
                 taffy.size.width = Dimension::max_content();
-                taffy.min_size.width = min_width;
-                taffy.max_size.width = Dimension::percent(1.0);
+                taffy.min_size.width = min_width.into();
+                taffy.max_size.width = Dimension::percent(1.0).into();
                 taffy.justify_self = Some(taffy::AlignSelf::CENTER);
             })
             .with_text_metrics(47.0, 52.0),
@@ -1134,7 +1134,7 @@ fn block_content_alignment_moves_the_inline_float_fragment_group() {
                 width: Dimension::length(200.0),
                 height: Dimension::length(100.0),
             };
-            taffy.align_content = Some(taffy::AlignContent::SAFE_CENTER);
+            taffy.align_content = taffy::AlignContent::SAFE_CENTER;
         }),
     );
     styles.primary.insert(
@@ -2796,7 +2796,7 @@ fn single_row_textarea_does_not_expand_its_flex_search_bar() {
         style(LayoutDisplay::Flex, PaintColor::TRANSPARENT).tap_taffy(|taffy| {
             taffy.display = taffy::Display::Flex;
             taffy.size.width = Dimension::length(300.0);
-            taffy.min_size.height = Dimension::length(50.0);
+            taffy.min_size.height = Dimension::length(50.0).into();
         }),
     );
     styles.primary.insert(

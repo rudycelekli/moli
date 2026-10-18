@@ -24,6 +24,7 @@ use log::debug;
 use markup5ever::{ns, small_char_set, TokenizerResult};
 use std::borrow::Cow::{self, Borrowed};
 use std::cell::{Cell, RefCell, RefMut};
+use std::cmp::Reverse;
 use std::collections::BTreeMap;
 use std::mem::replace;
 
@@ -596,26 +597,20 @@ macro_rules! go (
 
     // These can only come at the end.
 
-    ( $me:ident : to $s:ident                    ) => ({ $me.state.set(XmlState::$s); return ProcessResult::Continue;           });
-    ( $me:ident : to $s:ident $k1:expr           ) => ({ $me.state.set(XmlState::$s($k1)); return ProcessResult::Continue;      });
-    ( $me:ident : to $s:ident $k1:ident $k2:expr ) => ({ $me.state.set(XmlState::$s($k1($k2))); return ProcessResult::Continue; });
-
-    ( $me:ident : reconsume $s:ident                    ) => ({ $me.reconsume.set(true); go!($me: to $s);         });
-    ( $me:ident : reconsume $s:ident $k1:expr           ) => ({ $me.reconsume.set(true); go!($me: to $s $k1);     });
-    ( $me:ident : reconsume $s:ident $k1:ident $k2:expr ) => ({ $me.reconsume.set(true); go!($me: to $s $k1 $k2); });
-
+    ( $me:ident : to $s:expr                   ) => ({ $me.state.set($s); return ProcessResult::Continue;                  });
+    ( $me:ident : reconsume $s:expr            ) => ({ $me.reconsume.set(true); go!($me: to $s);                           });
     ( $me:ident : consume_char_ref             ) => ({ $me.consume_char_ref(None); return ProcessResult::Continue;         });
     ( $me:ident : consume_char_ref $addnl:expr ) => ({ $me.consume_char_ref(Some($addnl)); return ProcessResult::Continue; });
 
     // We have a default next state after emitting a tag, but the sink can override.
-    ( $me:ident : emit_tag $s:ident ) => ({
-        $me.state.set(XmlState::$s);
+    ( $me:ident : emit_tag $s:expr ) => ({
+        $me.state.set($s);
         return $me.emit_current_tag();
     });
 
     // We have a special when dealing with empty and short tags in Xml
-    ( $me:ident : emit_short_tag $s:ident ) => ({
-        $me.state.set(XmlState::$s);
+    ( $me:ident : emit_short_tag $s:expr ) => ({
+        $me.state.set($s);
         return $me.emit_short_tag();
     });
 
@@ -657,13 +652,6 @@ macro_rules! get_char ( ($me:expr, $input:expr) => {{
     character
 }});
 
-macro_rules! pop_except_from ( ($me:expr, $input:expr, $set:expr) => {{
-    let Some(popped_element) = $me.pop_except_from($input, $set) else {
-        return ProcessResult::Done;
-    };
-    popped_element
-}});
-
 macro_rules! eat ( ($me:expr, $input:expr, $pat:expr) => {{
     let Some(value) = $me.eat($input, $pat) else {
         return ProcessResult::Done;
@@ -694,9 +682,15 @@ impl<Sink: TokenSink> XmlTokenizer<Sink> {
         match self.state.get() {
             //§ data-state
             XmlState::Data => loop {
-                match pop_except_from!(self, input, small_char_set!('\r' '&' '<')) {
+                let Some(popped_element) =
+                    self.pop_except_from(input, small_char_set!('\r' '&' '<'))
+                else {
+                    return ProcessResult::Done;
+                };
+
+                match popped_element {
                     FromSet('&') => go!(self: consume_char_ref),
-                    FromSet('<') => go!(self: to TagState),
+                    FromSet('<') => go!(self: to XmlState::TagState),
                     FromSet(c) => go!(self: emit c),
                     NotFromSet(b) => self.emit_chars(b),
                 }
@@ -704,38 +698,38 @@ impl<Sink: TokenSink> XmlTokenizer<Sink> {
             //§ tag-state
             XmlState::TagState => loop {
                 match get_char!(self, input) {
-                    '!' => go!(self: to MarkupDecl),
-                    '/' => go!(self: to EndTagState),
-                    '?' => go!(self: to Pi),
+                    '!' => go!(self: to XmlState::MarkupDecl),
+                    '/' => go!(self: to XmlState::EndTagState),
+                    '?' => go!(self: to XmlState::Pi),
                     '\t' | '\n' | ' ' | ':' | '<' | '>' => {
-                        go!(self: error; emit '<'; reconsume Data)
+                        go!(self: error; emit '<'; reconsume XmlState::Data)
                     },
-                    cl => go!(self: create_tag StartTag cl; to TagName),
+                    cl => go!(self: create_tag StartTag cl; to XmlState::TagName),
                 }
             },
             //§ end-tag-state
             XmlState::EndTagState => loop {
                 match get_char!(self, input) {
-                    '>' => go!(self:  emit_short_tag Data),
+                    '>' => go!(self:  emit_short_tag XmlState::Data),
                     '\t' | '\n' | ' ' | '<' | ':' => {
-                        go!(self: error; emit '<'; emit '/'; reconsume Data)
+                        go!(self: error; emit '<'; emit '/'; reconsume XmlState::Data)
                     },
-                    cl => go!(self: create_tag EndTag cl; to EndTagName),
+                    cl => go!(self: create_tag EndTag cl; to XmlState::EndTagName),
                 }
             },
             //§ end-tag-name-state
             XmlState::EndTagName => loop {
                 match get_char!(self, input) {
-                    '\t' | '\n' | ' ' => go!(self: to EndTagNameAfter),
-                    '/' => go!(self: error; to EndTagNameAfter),
-                    '>' => go!(self: emit_tag Data),
+                    '\t' | '\n' | ' ' => go!(self: to XmlState::EndTagNameAfter),
+                    '/' => go!(self: error; to XmlState::EndTagNameAfter),
+                    '>' => go!(self: emit_tag XmlState::Data),
                     cl => go!(self: push_tag cl),
                 }
             },
             //§ end-tag-name-after-state
             XmlState::EndTagNameAfter => loop {
                 match get_char!(self, input) {
-                    '>' => go!(self: emit_tag Data),
+                    '>' => go!(self: emit_tag XmlState::Data),
                     '\t' | '\n' | ' ' => (),
                     _ => self.emit_error(Borrowed("Unexpected element in tag name")),
                 }
@@ -743,15 +737,15 @@ impl<Sink: TokenSink> XmlTokenizer<Sink> {
             //§ pi-state
             XmlState::Pi => loop {
                 match get_char!(self, input) {
-                    '\t' | '\n' | ' ' => go!(self: error; reconsume BogusComment),
-                    cl => go!(self: create_pi cl; to PiTarget),
+                    '\t' | '\n' | ' ' => go!(self: error; reconsume XmlState::BogusComment),
+                    cl => go!(self: create_pi cl; to XmlState::PiTarget),
                 }
             },
             //§ pi-target-state
             XmlState::PiTarget => loop {
                 match get_char!(self, input) {
-                    '\t' | '\n' | ' ' => go!(self: to PiTargetAfter),
-                    '?' => go!(self: to PiAfter),
+                    '\t' | '\n' | ' ' => go!(self: to XmlState::PiTargetAfter),
+                    '?' => go!(self: to XmlState::PiAfter),
                     cl => go!(self: push_pi_target cl),
                 }
             },
@@ -759,13 +753,13 @@ impl<Sink: TokenSink> XmlTokenizer<Sink> {
             XmlState::PiTargetAfter => loop {
                 match get_char!(self, input) {
                     '\t' | '\n' | ' ' => (),
-                    _ => go!(self: reconsume PiData),
+                    _ => go!(self: reconsume XmlState::PiData),
                 }
             },
             //§ pi-data-state
             XmlState::PiData => loop {
                 match get_char!(self, input) {
-                    '?' => go!(self: to PiAfter),
+                    '?' => go!(self: to XmlState::PiAfter),
                     cl => go!(self: push_pi_data cl),
                 }
             },
@@ -773,119 +767,122 @@ impl<Sink: TokenSink> XmlTokenizer<Sink> {
             XmlState::PiAfter => loop {
                 match get_char!(self, input) {
                     '>' => go!(self: emit_pi Data),
-                    '?' => go!(self: to PiAfter),
-                    cl => go!(self: push_pi_data cl),
+                    // The '?' that got us here is not part of a '?>', so it is
+                    // ordinary data. The one we just read may still close the
+                    // processing instruction, so stay in this state.
+                    '?' => go!(self: push_pi_data '?'; to XmlState::PiAfter),
+                    cl => go!(self: push_pi_data '?'; push_pi_data cl; to XmlState::PiData),
                 }
             },
             //§ markup-declaration-state
             XmlState::MarkupDecl => loop {
                 if eat!(self, input, "--") {
-                    go!(self: clear_comment; to CommentStart);
+                    go!(self: clear_comment; to XmlState::CommentStart);
                 } else if eat!(self, input, "[CDATA[") {
-                    go!(self: clear_cdata; to Cdata);
+                    go!(self: clear_cdata; to XmlState::Cdata);
                 } else if eat!(self, input, "DOCTYPE") {
-                    go!(self: to Doctype);
+                    go!(self: to XmlState::Doctype);
                 } else {
                     // FIXME: 'error' gives wrong message
-                    go!(self: error; to BogusComment);
+                    go!(self: error; to XmlState::BogusComment);
                 }
             },
             //§ comment-start-state
             XmlState::CommentStart => loop {
                 match get_char!(self, input) {
-                    '-' => go!(self: to CommentStartDash),
-                    '>' => go!(self: error; emit_comment; to Data),
-                    _ => go!(self: reconsume Comment),
+                    '-' => go!(self: to XmlState::CommentStartDash),
+                    '>' => go!(self: error; emit_comment; to XmlState::Data),
+                    _ => go!(self: reconsume XmlState::Comment),
                 }
             },
             //§ comment-start-dash-state
             XmlState::CommentStartDash => loop {
                 match get_char!(self, input) {
-                    '-' => go!(self: to CommentEnd),
-                    '>' => go!(self: error; emit_comment; to Data),
-                    _ => go!(self: push_comment '-'; reconsume Comment),
+                    '-' => go!(self: to XmlState::CommentEnd),
+                    '>' => go!(self: error; emit_comment; to XmlState::Data),
+                    _ => go!(self: push_comment '-'; reconsume XmlState::Comment),
                 }
             },
             //§ comment-state
             XmlState::Comment => loop {
                 match get_char!(self, input) {
-                    '<' => go!(self: push_comment '<'; to CommentLessThan),
-                    '-' => go!(self: to CommentEndDash),
+                    '<' => go!(self: push_comment '<'; to XmlState::CommentLessThan),
+                    '-' => go!(self: to XmlState::CommentEndDash),
                     c => go!(self: push_comment c),
                 }
             },
             //§ comment-less-than-sign-state
             XmlState::CommentLessThan => loop {
                 match get_char!(self, input) {
-                    '!' => go!(self: push_comment '!';to CommentLessThanBang),
+                    '!' => go!(self: push_comment '!';to XmlState::CommentLessThanBang),
                     '<' => go!(self: push_comment '<'),
-                    _ => go!(self: reconsume Comment),
+                    _ => go!(self: reconsume XmlState::Comment),
                 }
             },
             //§ comment-less-than-sign-bang-state
             XmlState::CommentLessThanBang => loop {
                 match get_char!(self, input) {
-                    '-' => go!(self: to CommentLessThanBangDash),
-                    _ => go!(self: reconsume Comment),
+                    '-' => go!(self: to XmlState::CommentLessThanBangDash),
+                    _ => go!(self: reconsume XmlState::Comment),
                 }
             },
             //§ comment-less-than-sign-bang-dash-state
             XmlState::CommentLessThanBangDash => loop {
                 match get_char!(self, input) {
-                    '-' => go!(self: to CommentLessThanBangDashDash),
-                    _ => go!(self: reconsume CommentEndDash),
+                    '-' => go!(self: to XmlState::CommentLessThanBangDashDash),
+                    _ => go!(self: reconsume XmlState::CommentEndDash),
                 }
             },
             //§ comment-less-than-sign-bang-dash-dash-state
             XmlState::CommentLessThanBangDashDash => loop {
                 match get_char!(self, input) {
-                    '>' => go!(self: reconsume CommentEnd),
-                    _ => go!(self: error; reconsume CommentEnd),
+                    '>' => go!(self: reconsume XmlState::CommentEnd),
+                    _ => go!(self: error; reconsume XmlState::CommentEnd),
                 }
             },
             //§ comment-end-dash-state
             XmlState::CommentEndDash => loop {
                 match get_char!(self, input) {
-                    '-' => go!(self: to CommentEnd),
-                    _ => go!(self: push_comment '-'; reconsume Comment),
+                    '-' => go!(self: to XmlState::CommentEnd),
+                    _ => go!(self: push_comment '-'; reconsume XmlState::Comment),
                 }
             },
             //§ comment-end-state
             XmlState::CommentEnd => loop {
                 match get_char!(self, input) {
-                    '>' => go!(self: emit_comment; to Data),
-                    '!' => go!(self: to CommentEndBang),
+                    '>' => go!(self: emit_comment; to XmlState::Data),
+                    '!' => go!(self: to XmlState::CommentEndBang),
                     '-' => go!(self: push_comment '-'),
-                    _ => go!(self: append_comment "--"; reconsume Comment),
+                    _ => go!(self: append_comment "--"; reconsume XmlState::Comment),
                 }
             },
             //§ comment-end-bang-state
             XmlState::CommentEndBang => loop {
                 match get_char!(self, input) {
-                    '-' => go!(self: append_comment "--!"; to CommentEndDash),
-                    '>' => go!(self: error; emit_comment; to Data),
-                    _ => go!(self: append_comment "--!"; reconsume Comment),
+                    '-' => go!(self: append_comment "--!"; to XmlState::CommentEndDash),
+                    '>' => go!(self: error; emit_comment; to XmlState::Data),
+                    _ => go!(self: append_comment "--!"; reconsume XmlState::Comment),
                 }
             },
             //§ bogus-comment-state
             XmlState::BogusComment => loop {
                 match get_char!(self, input) {
-                    '>' => go!(self: emit_comment; to Data),
+                    '>' => go!(self: emit_comment; to XmlState::Data),
                     c => go!(self: push_comment c),
                 }
             },
             //§ cdata-state
             XmlState::Cdata => loop {
                 match get_char!(self, input) {
-                    ']' => go!(self: to CdataBracket),
+                    ']' => go!(self: to XmlState::CdataBracket),
                     cl => go!(self: push_cdata cl),
                 }
             },
             //§ cdata-bracket-state
             XmlState::CdataBracket => loop {
                 match get_char!(self, input) {
-                    ']' => go!(self: to CdataEnd),
-                    cl => go!(self: push_cdata ']'; push_cdata cl; to Cdata),
+                    ']' => go!(self: to XmlState::CdataEnd),
+                    cl => go!(self: push_cdata ']'; push_cdata cl; to XmlState::Cdata),
                 }
             },
             //§ cdata-end-state
@@ -893,15 +890,17 @@ impl<Sink: TokenSink> XmlTokenizer<Sink> {
                 match get_char!(self, input) {
                     '>' => go!(self: emit_cdata Data),
                     ']' => go!(self: push_cdata ']'),
-                    cl => go!(self: push_cdata ']'; push_cdata ']'; push_cdata cl; to Cdata),
+                    cl => {
+                        go!(self: push_cdata ']'; push_cdata ']'; push_cdata cl; to XmlState::Cdata)
+                    },
                 }
             },
             //§ tag-name-state
             XmlState::TagName => loop {
                 match get_char!(self, input) {
-                    '\t' | '\n' | ' ' => go!(self: to TagAttrNameBefore),
-                    '>' => go!(self: emit_tag Data),
-                    '/' => go!(self: set_empty_tag; to TagEmpty),
+                    '\t' | '\n' | ' ' => go!(self: to XmlState::TagAttrNameBefore),
+                    '>' => go!(self: emit_tag XmlState::Data),
+                    '/' => go!(self: set_empty_tag; to XmlState::TagEmpty),
                     cl => go!(self: push_tag cl),
                 }
             },
@@ -909,26 +908,26 @@ impl<Sink: TokenSink> XmlTokenizer<Sink> {
             XmlState::TagEmpty => loop {
                 match get_char!(self, input) {
                     '>' => go!(self: emit_empty_tag Data),
-                    _ => go!(self: reconsume TagAttrValueBefore),
+                    _ => go!(self: reconsume XmlState::TagAttrValueBefore),
                 }
             },
             //§ tag-attribute-name-before-state
             XmlState::TagAttrNameBefore => loop {
                 match get_char!(self, input) {
                     '\t' | '\n' | ' ' => (),
-                    '>' => go!(self: emit_tag Data),
-                    '/' => go!(self: set_empty_tag; to TagEmpty),
+                    '>' => go!(self: emit_tag XmlState::Data),
+                    '/' => go!(self: set_empty_tag; to XmlState::TagEmpty),
                     ':' => go!(self: error),
-                    cl => go!(self: create_attr cl; to TagAttrName),
+                    cl => go!(self: create_attr cl; to XmlState::TagAttrName),
                 }
             },
             //§ tag-attribute-name-state
             XmlState::TagAttrName => loop {
                 match get_char!(self, input) {
-                    '=' => go!(self: to TagAttrValueBefore),
-                    '>' => go!(self: emit_tag Data),
-                    '\t' | '\n' | ' ' => go!(self: to TagAttrNameAfter),
-                    '/' => go!(self: set_empty_tag; to TagEmpty),
+                    '=' => go!(self: to XmlState::TagAttrValueBefore),
+                    '>' => go!(self: emit_tag XmlState::Data),
+                    '\t' | '\n' | ' ' => go!(self: to XmlState::TagAttrNameAfter),
+                    '/' => go!(self: set_empty_tag; to XmlState::TagEmpty),
                     cl => go!(self: push_name cl),
                 }
             },
@@ -936,27 +935,33 @@ impl<Sink: TokenSink> XmlTokenizer<Sink> {
             XmlState::TagAttrNameAfter => loop {
                 match get_char!(self, input) {
                     '\t' | '\n' | ' ' => (),
-                    '=' => go!(self: to TagAttrValueBefore),
-                    '>' => go!(self: emit_tag Data),
-                    '/' => go!(self: set_empty_tag; to TagEmpty),
-                    cl => go!(self: create_attr cl; to TagAttrName),
+                    '=' => go!(self: to XmlState::TagAttrValueBefore),
+                    '>' => go!(self: emit_tag XmlState::Data),
+                    '/' => go!(self: set_empty_tag; to XmlState::TagEmpty),
+                    cl => go!(self: create_attr cl; to XmlState::TagAttrName),
                 }
             },
             //§ tag-attribute-value-before-state
             XmlState::TagAttrValueBefore => loop {
                 match get_char!(self, input) {
                     '\t' | '\n' | ' ' => (),
-                    '"' => go!(self: to TagAttrValue DoubleQuoted),
-                    '\'' => go!(self: to TagAttrValue SingleQuoted),
-                    '&' => go!(self: reconsume TagAttrValue(Unquoted)),
-                    '>' => go!(self: emit_tag Data),
-                    cl => go!(self: push_value cl; to TagAttrValue(Unquoted)),
+                    '"' => go!(self: to XmlState::TagAttrValue(DoubleQuoted)),
+                    '\'' => go!(self: to XmlState::TagAttrValue(SingleQuoted)),
+                    '&' => go!(self: reconsume XmlState::TagAttrValue(Unquoted)),
+                    '>' => go!(self: emit_tag XmlState::Data),
+                    cl => go!(self: push_value cl; to XmlState::TagAttrValue(Unquoted)),
                 }
             },
             //§ tag-attribute-value-double-quoted-state
             XmlState::TagAttrValue(DoubleQuoted) => loop {
-                match pop_except_from!(self, input, small_char_set!('\n' '"' '&')) {
-                    FromSet('"') => go!(self: to TagAttrNameBefore),
+                let Some(popped_element) =
+                    self.pop_except_from(input, small_char_set!('\n' '"' '&'))
+                else {
+                    return ProcessResult::Done;
+                };
+
+                match popped_element {
+                    FromSet('"') => go!(self: to XmlState::TagAttrNameBefore),
                     FromSet('&') => go!(self: consume_char_ref '"' ),
                     FromSet(c) => go!(self: push_value c),
                     NotFromSet(ref b) => go!(self: append_value b),
@@ -964,8 +969,14 @@ impl<Sink: TokenSink> XmlTokenizer<Sink> {
             },
             //§ tag-attribute-value-single-quoted-state
             XmlState::TagAttrValue(SingleQuoted) => loop {
-                match pop_except_from!(self, input, small_char_set!('\n' '\'' '&')) {
-                    FromSet('\'') => go!(self: to TagAttrNameBefore),
+                let Some(popped_element) =
+                    self.pop_except_from(input, small_char_set!('\n' '\'' '&'))
+                else {
+                    return ProcessResult::Done;
+                };
+
+                match popped_element {
+                    FromSet('\'') => go!(self: to XmlState::TagAttrNameBefore),
                     FromSet('&') => go!(self: consume_char_ref '\''),
                     FromSet(c) => go!(self: push_value c),
                     NotFromSet(ref b) => go!(self: append_value b),
@@ -973,10 +984,18 @@ impl<Sink: TokenSink> XmlTokenizer<Sink> {
             },
             //§ tag-attribute-value-double-quoted-state
             XmlState::TagAttrValue(Unquoted) => loop {
-                match pop_except_from!(self, input, small_char_set!('\n' '\t' ' ' '&' '>')) {
-                    FromSet('\t') | FromSet('\n') | FromSet(' ') => go!(self: to TagAttrNameBefore),
+                let Some(popped_element) =
+                    self.pop_except_from(input, small_char_set!('\n' '\t' ' ' '&' '>'))
+                else {
+                    return ProcessResult::Done;
+                };
+
+                match popped_element {
+                    FromSet('\t') | FromSet('\n') | FromSet(' ') => {
+                        go!(self: to XmlState::TagAttrNameBefore)
+                    },
                     FromSet('&') => go!(self: consume_char_ref),
-                    FromSet('>') => go!(self: emit_tag Data),
+                    FromSet('>') => go!(self: emit_tag XmlState::Data),
                     FromSet(c) => go!(self: push_value c),
                     NotFromSet(ref b) => go!(self: append_value b),
                 }
@@ -985,93 +1004,101 @@ impl<Sink: TokenSink> XmlTokenizer<Sink> {
             //§ doctype-state
             XmlState::Doctype => loop {
                 match get_char!(self, input) {
-                    '\t' | '\n' | '\x0C' | ' ' => go!(self: to BeforeDoctypeName),
-                    _ => go!(self: error; reconsume BeforeDoctypeName),
+                    '\t' | '\n' | '\x0C' | ' ' => go!(self: to XmlState::BeforeDoctypeName),
+                    _ => go!(self: error; reconsume XmlState::BeforeDoctypeName),
                 }
             },
             //§ before-doctype-name-state
             XmlState::BeforeDoctypeName => loop {
                 match get_char!(self, input) {
                     '\t' | '\n' | '\x0C' | ' ' => (),
-                    '>' => go!(self: error; emit_doctype; to Data),
+                    '>' => go!(self: error; emit_doctype; to XmlState::Data),
                     c => go!(self: create_doctype; push_doctype_name (c.to_ascii_lowercase());
-                                  to DoctypeName),
+                                  to XmlState::DoctypeName),
                 }
             },
             //§ doctype-name-state
             XmlState::DoctypeName => loop {
                 match get_char!(self, input) {
-                    '\t' | '\n' | '\x0C' | ' ' => go!(self: to AfterDoctypeName),
-                    '>' => go!(self: emit_doctype; to Data),
+                    '\t' | '\n' | '\x0C' | ' ' => go!(self: to XmlState::AfterDoctypeName),
+                    '>' => go!(self: emit_doctype; to XmlState::Data),
                     c => go!(self: push_doctype_name (c.to_ascii_lowercase());
-                                  to DoctypeName),
+                                  to XmlState::DoctypeName),
                 }
             },
             //§ after-doctype-name-state
             XmlState::AfterDoctypeName => loop {
                 if eat!(self, input, "public") {
-                    go!(self: to AfterDoctypeKeyword Public);
+                    go!(self: to XmlState::AfterDoctypeKeyword(Public));
                 } else if eat!(self, input, "system") {
-                    go!(self: to AfterDoctypeKeyword System);
+                    go!(self: to XmlState::AfterDoctypeKeyword(System));
                 } else {
                     match get_char!(self, input) {
                         '\t' | '\n' | '\x0C' | ' ' => (),
-                        '>' => go!(self: emit_doctype; to Data),
-                        _ => go!(self: error; to BogusDoctype),
+                        '>' => go!(self: emit_doctype; to XmlState::Data),
+                        _ => go!(self: error; to XmlState::BogusDoctype),
                     }
                 }
             },
             //§ after-doctype-public-keyword-state
             XmlState::AfterDoctypeKeyword(Public) => loop {
                 match get_char!(self, input) {
-                    '\t' | '\n' | '\x0C' | ' ' => go!(self: to BeforeDoctypeIdentifier Public),
+                    '\t' | '\n' | '\x0C' | ' ' => {
+                        go!(self: to XmlState::BeforeDoctypeIdentifier(Public))
+                    },
                     '"' => {
-                        go!(self: error; clear_doctype_id Public; to DoctypeIdentifierDoubleQuoted Public)
+                        go!(self: error; clear_doctype_id Public; to XmlState::DoctypeIdentifierDoubleQuoted(Public))
                     },
                     '\'' => {
-                        go!(self: error; clear_doctype_id Public; to DoctypeIdentifierSingleQuoted Public)
+                        go!(self: error; clear_doctype_id Public; to XmlState::DoctypeIdentifierSingleQuoted(Public))
                     },
-                    '>' => go!(self: error; emit_doctype; to Data),
-                    _ => go!(self: error; to BogusDoctype),
+                    '>' => go!(self: error; emit_doctype; to XmlState::Data),
+                    _ => go!(self: error; to XmlState::BogusDoctype),
                 }
             },
             //§ after-doctype-system-keyword-state
             XmlState::AfterDoctypeKeyword(System) => loop {
                 match get_char!(self, input) {
-                    '\t' | '\n' | '\x0C' | ' ' => go!(self: to BeforeDoctypeIdentifier System),
+                    '\t' | '\n' | '\x0C' | ' ' => {
+                        go!(self: to XmlState::BeforeDoctypeIdentifier(System))
+                    },
                     '"' => {
-                        go!(self: error; clear_doctype_id System; to DoctypeIdentifierDoubleQuoted System)
+                        go!(self: error; clear_doctype_id System; to XmlState::DoctypeIdentifierDoubleQuoted(System))
                     },
                     '\'' => {
-                        go!(self: error; clear_doctype_id System; to DoctypeIdentifierSingleQuoted System)
+                        go!(self: error; clear_doctype_id System; to XmlState::DoctypeIdentifierSingleQuoted(System))
                     },
-                    '>' => go!(self: error; emit_doctype; to Data),
-                    _ => go!(self: error; to BogusDoctype),
+                    '>' => go!(self: error; emit_doctype; to XmlState::Data),
+                    _ => go!(self: error; to XmlState::BogusDoctype),
                 }
             },
             //§ before_doctype_public_identifier_state before_doctype_system_identifier_state
             XmlState::BeforeDoctypeIdentifier(kind) => loop {
                 match get_char!(self, input) {
                     '\t' | '\n' | '\x0C' | ' ' => (),
-                    '"' => go!(self: clear_doctype_id kind; to DoctypeIdentifierDoubleQuoted kind),
-                    '\'' => go!(self: clear_doctype_id kind; to DoctypeIdentifierSingleQuoted kind),
-                    '>' => go!(self: error; emit_doctype; to Data),
-                    _ => go!(self: error; to BogusDoctype),
+                    '"' => {
+                        go!(self: clear_doctype_id kind; to XmlState::DoctypeIdentifierDoubleQuoted(kind))
+                    },
+                    '\'' => {
+                        go!(self: clear_doctype_id kind; to XmlState::DoctypeIdentifierSingleQuoted(kind))
+                    },
+                    '>' => go!(self: error; emit_doctype; to XmlState::Data),
+                    _ => go!(self: error; to XmlState::BogusDoctype),
                 }
             },
             //§ doctype_public_identifier_double_quoted_state doctype_system_identifier_double_quoted_state
             XmlState::DoctypeIdentifierDoubleQuoted(kind) => loop {
                 match get_char!(self, input) {
-                    '"' => go!(self: to AfterDoctypeIdentifier kind),
-                    '>' => go!(self: error; emit_doctype; to Data),
+                    '"' => go!(self: to XmlState::AfterDoctypeIdentifier(kind)),
+                    '>' => go!(self: error; emit_doctype; to XmlState::Data),
                     c => go!(self: push_doctype_id kind c),
                 }
             },
             //§ doctype_public_identifier_single_quoted_state doctype_system_identifier_single_quoted_state
             XmlState::DoctypeIdentifierSingleQuoted(kind) => loop {
                 match get_char!(self, input) {
-                    '\'' => go!(self: to AfterDoctypeIdentifier kind),
-                    '>' => go!(self: error; emit_doctype; to Data),
+                    '\'' => go!(self: to XmlState::AfterDoctypeIdentifier(kind)),
+                    '>' => go!(self: error; emit_doctype; to XmlState::Data),
                     c => go!(self: push_doctype_id kind c),
                 }
             },
@@ -1079,40 +1106,40 @@ impl<Sink: TokenSink> XmlTokenizer<Sink> {
             XmlState::AfterDoctypeIdentifier(Public) => loop {
                 match get_char!(self, input) {
                     '\t' | '\n' | '\x0C' | ' ' => {
-                        go!(self: to BetweenDoctypePublicAndSystemIdentifiers)
+                        go!(self: to XmlState::BetweenDoctypePublicAndSystemIdentifiers)
                     },
                     '\'' => {
-                        go!(self: error; clear_doctype_id System; to DoctypeIdentifierSingleQuoted(System))
+                        go!(self: error; clear_doctype_id System; to XmlState::DoctypeIdentifierSingleQuoted(System))
                     },
                     '"' => {
-                        go!(self: error; clear_doctype_id System; to DoctypeIdentifierDoubleQuoted(System))
+                        go!(self: error; clear_doctype_id System; to XmlState::DoctypeIdentifierDoubleQuoted(System))
                     },
-                    '>' => go!(self: emit_doctype; to Data),
-                    _ => go!(self: error; to BogusDoctype),
+                    '>' => go!(self: emit_doctype; to XmlState::Data),
+                    _ => go!(self: error; to XmlState::BogusDoctype),
                 }
             },
             //§ doctype_system_identifier_single_quoted_state
             XmlState::AfterDoctypeIdentifier(System) => loop {
                 match get_char!(self, input) {
                     '\t' | '\n' | '\x0C' | ' ' => (),
-                    '>' => go!(self: emit_doctype; to Data),
-                    _ => go!(self: error; to BogusDoctype),
+                    '>' => go!(self: emit_doctype; to XmlState::Data),
+                    _ => go!(self: error; to XmlState::BogusDoctype),
                 }
             },
             //§ between_doctype_public_and_system_identifier_state
             XmlState::BetweenDoctypePublicAndSystemIdentifiers => loop {
                 match get_char!(self, input) {
                     '\t' | '\n' | '\x0C' | ' ' => (),
-                    '>' => go!(self: emit_doctype; to Data),
-                    '\'' => go!(self: to DoctypeIdentifierSingleQuoted System),
-                    '"' => go!(self: to DoctypeIdentifierDoubleQuoted System),
-                    _ => go!(self: error; to BogusDoctype),
+                    '>' => go!(self: emit_doctype; to XmlState::Data),
+                    '\'' => go!(self: to XmlState::DoctypeIdentifierSingleQuoted(System)),
+                    '"' => go!(self: to XmlState::DoctypeIdentifierDoubleQuoted(System)),
+                    _ => go!(self: error; to XmlState::BogusDoctype),
                 }
             },
             //§ bogus_doctype_state
             XmlState::BogusDoctype => loop {
                 if get_char!(self, input) == '>' {
-                    go!(self: emit_doctype; to Data);
+                    go!(self: emit_doctype; to XmlState::Data);
                 }
             },
         }
@@ -1162,12 +1189,9 @@ impl<Sink: TokenSink> XmlTokenizer<Sink> {
             .iter()
             .map(|(s, t)| (*s, *t))
             .collect();
-        results.sort_by(|&(_, x), &(_, y)| y.cmp(&x));
+        results.sort_by_key(|&(_, x)| Reverse(x));
 
-        let total: u64 = results
-            .iter()
-            .map(|&(_, t)| t)
-            .fold(0, ::std::ops::Add::add);
+        let total: u64 = results.iter().map(|&(_, t)| t).sum();
         debug!("\nTokenizer profile, in nanoseconds");
         debug!(
             "\n{:12}         total in token sink",
@@ -1186,33 +1210,35 @@ impl<Sink: TokenSink> XmlTokenizer<Sink> {
         match self.state.get() {
             XmlState::Data => go!(self: eof),
             XmlState::CommentStart | XmlState::CommentLessThan | XmlState::CommentLessThanBang => {
-                go!(self: reconsume Comment)
+                go!(self: reconsume XmlState::Comment)
             },
-            XmlState::CommentLessThanBangDash => go!(self: reconsume CommentEndDash),
-            XmlState::CommentLessThanBangDashDash => go!(self: reconsume CommentEnd),
+            XmlState::CommentLessThanBangDash => go!(self: reconsume XmlState::CommentEndDash),
+            XmlState::CommentLessThanBangDashDash => go!(self: reconsume XmlState::CommentEnd),
             XmlState::CommentStartDash
             | XmlState::Comment
             | XmlState::CommentEndDash
             | XmlState::CommentEnd
             | XmlState::CommentEndBang => go!(self: error_eof; emit_comment; eof),
-            XmlState::TagState => go!(self: error_eof; emit '<'; to Data),
-            XmlState::EndTagState => go!(self: error_eof; emit '<'; emit '/'; to Data),
-            XmlState::TagEmpty => go!(self: error_eof; to TagAttrNameBefore),
-            XmlState::Cdata => go!(self: error_eof; emit_incomplete_cdata 0; to Data),
+            XmlState::TagState => go!(self: error_eof; emit '<'; to XmlState::Data),
+            XmlState::EndTagState => go!(self: error_eof; emit '<'; emit '/'; to XmlState::Data),
+            XmlState::TagEmpty => go!(self: error_eof; to XmlState::TagAttrNameBefore),
+            XmlState::Cdata => go!(self: error_eof; emit_incomplete_cdata 0; to XmlState::Data),
             XmlState::CdataBracket => {
-                go!(self: error_eof; emit_incomplete_cdata 1; to Data)
+                go!(self: error_eof; emit_incomplete_cdata 1; to XmlState::Data)
             },
-            XmlState::CdataEnd => go!(self: error_eof; emit_incomplete_cdata 2; to Data),
-            XmlState::Pi => go!(self: error_eof; to BogusComment),
-            XmlState::PiTargetAfter | XmlState::PiAfter => go!(self: reconsume PiData),
-            XmlState::MarkupDecl => go!(self: error_eof; to BogusComment),
+            XmlState::CdataEnd => go!(self: error_eof; emit_incomplete_cdata 2; to XmlState::Data),
+            XmlState::Pi => go!(self: error_eof; to XmlState::BogusComment),
+            XmlState::PiTargetAfter => go!(self: reconsume XmlState::PiData),
+            // The '?' we consumed to get here never became a '?>', so keep it.
+            XmlState::PiAfter => go!(self: push_pi_data '?'; reconsume XmlState::PiData),
+            XmlState::MarkupDecl => go!(self: error_eof; to XmlState::BogusComment),
             XmlState::TagName
             | XmlState::TagAttrNameBefore
             | XmlState::EndTagName
             | XmlState::TagAttrNameAfter
             | XmlState::EndTagNameAfter
             | XmlState::TagAttrValueBefore
-            | XmlState::TagAttrValue(_) => go!(self: error_eof; emit_tag Data),
+            | XmlState::TagAttrValue(_) => go!(self: error_eof; emit_tag XmlState::Data),
             XmlState::PiData | XmlState::PiTarget => go!(self: error_eof; emit_pi Data),
             XmlState::TagAttrName => go!(self: error_eof; emit_start_tag Data),
             XmlState::BeforeDoctypeName
@@ -1225,10 +1251,10 @@ impl<Sink: TokenSink> XmlTokenizer<Sink> {
             | XmlState::DoctypeIdentifierSingleQuoted(_)
             | XmlState::DoctypeIdentifierDoubleQuoted(_)
             | XmlState::BetweenDoctypePublicAndSystemIdentifiers => {
-                go!(self: error_eof; emit_doctype; to Data)
+                go!(self: error_eof; emit_doctype; to XmlState::Data)
             },
-            XmlState::BogusDoctype => go!(self: emit_doctype; to Data),
-            XmlState::BogusComment => go!(self: emit_comment; to Data),
+            XmlState::BogusDoctype => go!(self: emit_doctype; to XmlState::Data),
+            XmlState::BogusComment => go!(self: emit_comment; to XmlState::Data),
         }
     }
 
@@ -1281,27 +1307,26 @@ impl<Sink: TokenSink> XmlTokenizer<Sink> {
             return;
         }
 
-        // Check for a duplicate attribute.
+        let qname = process_qname(replace(
+            &mut self.current_attr_name.borrow_mut(),
+            StrTendril::new(),
+        ));
+
+        // Check for a duplicate attribute. Two attributes are the same only if
+        // both their prefix and their local name match, so xml:lang and lang
+        // are distinct names and may sit on the same element.
         // FIXME: the spec says we should error as soon as the name is finished.
         // FIXME: linear time search, do we care?
-        let dup = {
-            let current_attr_name = self.current_attr_name.borrow();
-            let name = &current_attr_name[..];
-            self.current_tag_attrs
-                .borrow()
-                .iter()
-                .any(|a| &*a.name.local == name)
-        };
+        let dup = self
+            .current_tag_attrs
+            .borrow()
+            .iter()
+            .any(|a| a.name.prefix == qname.prefix && a.name.local == qname.local);
 
         if dup {
             self.emit_error(Borrowed("Duplicate attribute"));
-            self.current_attr_name.borrow_mut().clear();
             self.current_attr_value.borrow_mut().clear();
         } else {
-            let qname = process_qname(replace(
-                &mut self.current_attr_name.borrow_mut(),
-                StrTendril::new(),
-            ));
             let attr = Attribute {
                 name: qname.clone(),
                 value: replace(&mut self.current_attr_value.borrow_mut(), StrTendril::new()),
@@ -1324,9 +1349,152 @@ impl<Sink: TokenSink> XmlTokenizer<Sink> {
 #[cfg(test)]
 mod test {
 
-    use super::process_qname;
-    use crate::tendril::SliceExt;
+    use super::{process_qname, ProcessResult, Token, TokenSink, XmlTokenizer};
+    use crate::tendril::{SliceExt, StrTendril};
     use crate::{LocalName, Prefix};
+    use markup5ever::buffer_queue::BufferQueue;
+    use std::cell::RefCell;
+
+    struct PiCollector {
+        pis: RefCell<Vec<(String, String)>>,
+    }
+
+    impl TokenSink for PiCollector {
+        type Handle = ();
+
+        fn process_token(&self, token: Token) -> ProcessResult<()> {
+            if let Token::ProcessingInstruction(pi) = token {
+                self.pis
+                    .borrow_mut()
+                    .push((pi.target.to_string(), pi.data.to_string()));
+            }
+            ProcessResult::Continue
+        }
+    }
+
+    struct ErrorCollector {
+        errors: RefCell<Vec<String>>,
+    }
+
+    impl TokenSink for ErrorCollector {
+        type Handle = ();
+
+        fn process_token(&self, token: Token) -> ProcessResult<()> {
+            if let Token::ParseError(error) = token {
+                self.errors.borrow_mut().push(error.to_string());
+            }
+            ProcessResult::Continue
+        }
+    }
+
+    fn tokenize_pis(input: &str) -> Vec<(String, String)> {
+        let sink = PiCollector {
+            pis: RefCell::new(Vec::new()),
+        };
+        let queue = BufferQueue::default();
+        queue.push_back(StrTendril::from(input));
+        let tokenizer = XmlTokenizer::new(sink, Default::default());
+        let _ = tokenizer.feed(&queue);
+        tokenizer.end();
+        tokenizer.sink.pis.into_inner()
+    }
+
+    fn tokenize_errors(input: &str) -> Vec<String> {
+        let sink = ErrorCollector {
+            errors: RefCell::new(Vec::new()),
+        };
+        let queue = BufferQueue::default();
+        queue.push_back(StrTendril::from(input));
+        let tokenizer = XmlTokenizer::new(sink, Default::default());
+        let _ = tokenizer.feed(&queue);
+        tokenizer.end();
+        tokenizer.sink.errors.into_inner()
+    }
+
+    #[test]
+    fn pi_data_keeps_question_marks() {
+        assert_eq!(
+            tokenize_pis(r#"<?xml-stylesheet href="style.xsl?v=2"?>"#),
+            vec![(
+                "xml-stylesheet".to_owned(),
+                r#"href="style.xsl?v=2""#.to_owned()
+            )]
+        );
+
+        assert_eq!(
+            tokenize_pis("<?target a?b?c?>"),
+            vec![("target".to_owned(), "a?b?c".to_owned())]
+        );
+
+        // A run of question marks only ends the instruction when one of them
+        // is followed by '>'.
+        assert_eq!(
+            tokenize_pis("<?target a???>"),
+            vec![("target".to_owned(), "a??".to_owned())]
+        );
+    }
+
+    #[test]
+    fn pi_only_ends_on_question_mark_gt() {
+        // The '>' here is data, because the character before it is not a '?'.
+        assert_eq!(
+            tokenize_pis("<?target a?b>c?>"),
+            vec![("target".to_owned(), "a?b>c".to_owned())]
+        );
+    }
+
+    #[test]
+    fn pi_without_data_is_empty() {
+        assert_eq!(
+            tokenize_pis("<?target?>"),
+            vec![("target".to_owned(), String::new())]
+        );
+
+        assert_eq!(
+            tokenize_pis("<?target ?>"),
+            vec![("target".to_owned(), String::new())]
+        );
+    }
+
+    #[test]
+    fn unterminated_pi_keeps_trailing_question_mark() {
+        assert_eq!(
+            tokenize_pis("<?target a?"),
+            vec![("target".to_owned(), "a?".to_owned())]
+        );
+    }
+
+    #[test]
+    fn qualified_and_unqualified_names_are_distinct() {
+        // The xml prefix is bound to http://www.w3.org/XML/1998/namespace by
+        // definition, so xml:lang and lang have different expanded names and
+        // both orderings are fine. This is the second of the two legal cases
+        // in https://www.w3.org/TR/REC-xml-names/#uniqAttrs
+        assert!(tokenize_errors(r#"<root xml:lang="en" lang="en"/>"#).is_empty());
+        assert!(tokenize_errors(r#"<root lang="en" xml:lang="en"/>"#).is_empty());
+    }
+
+    #[test]
+    fn different_prefixes_are_left_to_the_tree_builder() {
+        // Whether these two are duplicates depends on what a and b are bound
+        // to, and the tokenizer has no bindings, so it says nothing either way.
+        // XmlTreeBuilder::bind_attr_qname resolves the prefixes and compares
+        // expanded names, which is where a real duplicate gets caught.
+        assert!(tokenize_errors(r#"<root a:name="1" b:name="2"/>"#).is_empty());
+    }
+
+    #[test]
+    fn real_duplicates_are_still_reported() {
+        assert_eq!(
+            tokenize_errors(r#"<root lang="en" lang="fr"/>"#),
+            vec!["Duplicate attribute".to_owned()]
+        );
+
+        assert_eq!(
+            tokenize_errors(r#"<root xml:lang="en" xml:lang="fr"/>"#),
+            vec!["Duplicate attribute".to_owned()]
+        );
+    }
 
     #[test]
     fn simple_namespace() {

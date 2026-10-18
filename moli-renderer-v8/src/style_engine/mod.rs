@@ -1141,7 +1141,6 @@ pub(crate) fn ensure_stylo_browser_compat_prefs() {
         stylo_static_prefs::set_pref!("layout.container-queries.enabled", true);
         stylo_static_prefs::set_pref!("layout.columns.enabled", true);
         stylo_static_prefs::set_pref!("layout.css.at-scope.enabled", true);
-        stylo_static_prefs::set_pref!("layout.css.attr.enabled", true);
         stylo_static_prefs::set_pref!("layout.css.content.alt-text.enabled", true);
         stylo_static_prefs::set_pref!("layout.css.font-palette.enabled", true);
         stylo_static_prefs::set_pref!("layout.css.margin-rules.enabled", true);

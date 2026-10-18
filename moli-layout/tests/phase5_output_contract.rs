@@ -1470,7 +1470,7 @@ fn stable_both_edges_reserves_horizontal_space_during_numeric_layout() {
                     },
                     min_size: Size {
                         width: length(400.0),
-                        height: Dimension::auto(),
+                        height: Dimension::auto().into(),
                     },
                     ..Style::default()
                 },

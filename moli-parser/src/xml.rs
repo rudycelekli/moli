@@ -430,8 +430,8 @@ impl<'a> XmlLiveTreeSinkTarget<'a> {
 
         for attribute in attrs {
             let already_exists = element.attributes().iter().any(|existing| {
-                existing.namespace() == attribute.name.ns.as_ref()
-                    && existing.local_name() == attribute.name.local.as_ref()
+                existing.namespace() == AsRef::<str>::as_ref(&attribute.name.ns)
+                    && existing.local_name() == AsRef::<str>::as_ref(&attribute.name.local)
                     && existing.prefix()
                         == attribute.name.prefix.as_ref().map(|prefix| prefix.as_ref())
             });

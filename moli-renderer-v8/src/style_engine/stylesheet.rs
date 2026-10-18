@@ -561,7 +561,9 @@ fn font_family_list_starts_with_ahem(font: &Font) -> bool {
         .iter()
         .next()
         .is_some_and(|family| match family {
-            SingleFontFamily::FamilyName(name) => name.name.as_ref().eq_ignore_ascii_case("Ahem"),
+            SingleFontFamily::FamilyName(name) => {
+                AsRef::<str>::as_ref(&name.name).eq_ignore_ascii_case("Ahem")
+            }
             SingleFontFamily::Generic(_) => false,
         })
 }

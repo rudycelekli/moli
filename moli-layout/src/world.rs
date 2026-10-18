@@ -696,9 +696,9 @@ where
         }
     }
 
-    pub(crate) fn numeric_cache(&self, id: LayoutBoxId) -> Option<&Cache> {
+    pub(crate) fn numeric_cache(&mut self, id: LayoutBoxId) -> Option<&mut Cache> {
         let slot = self.boxes.get(id.index())?.cache_slot?;
-        self.box_caches.get((slot.get() - 1) as usize)
+        self.box_caches.get_mut((slot.get() - 1) as usize)
     }
 
     pub(crate) fn numeric_cache_mut(&mut self, id: LayoutBoxId) -> &mut Cache {

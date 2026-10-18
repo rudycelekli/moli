@@ -1376,13 +1376,13 @@ fn transition_property_token_is_valid(value: &str) -> bool {
 }
 
 fn transition_property_token_serialization(value: &str) -> Option<String> {
-    let mut input = ParserInput::new(value);
-    let mut input = Parser::new(&mut input);
+    let input = value;
+    let mut input = Parser::new(input);
     let ident = input
         .parse_entirely(|input| {
             input
                 .expect_ident_cloned()
-                .map_err(|_| input.new_custom_error::<(), ()>(()))
+                .map_err(|_| cssparser::ParseError::<()>::custom(()))
         })
         .ok()?;
     let lowered = ident.to_ascii_lowercase();

@@ -331,7 +331,7 @@ fn flex_wrap_gap_and_cross_axis_distribution_are_numeric() {
                     width: length(10.0),
                     height: length(20.0),
                 },
-                align_content: Some(AlignContent::SPACE_BETWEEN),
+                align_content: AlignContent::SPACE_BETWEEN,
                 ..Style::default()
             },
             PaintColor::TRANSPARENT,
@@ -500,7 +500,7 @@ fn flex_grow_shrink_and_cross_axis_alignment_are_numeric() {
                     width: length(300.0),
                     height: length(100.0),
                 },
-                align_items: Some(taffy::AlignItems::CENTER),
+                align_items: taffy::AlignItems::CENTER,
                 ..Style::default()
             },
             PaintColor::TRANSPARENT,
@@ -729,8 +729,8 @@ fn grid_container_justify_items_center_shrink_wraps_an_auto_sized_item() {
                     width: length(300.0),
                     height: length(200.0),
                 },
-                justify_items: Some(taffy::AlignItems::CENTER),
-                align_items: Some(taffy::AlignItems::CENTER),
+                justify_items: taffy::AlignItems::CENTER,
+                align_items: taffy::AlignItems::CENTER,
                 ..Style::default()
             },
             PaintColor::TRANSPARENT,
@@ -781,8 +781,8 @@ fn centered_grid_item_with_percent_height_and_auto_block_margin_keeps_intrinsic_
                     bottom: length(0.0),
                 },
                 grid_template_rows: vec![fr(1.0)],
-                justify_items: Some(taffy::AlignItems::CENTER),
-                align_items: Some(taffy::AlignItems::CENTER),
+                justify_items: taffy::AlignItems::CENTER,
+                align_items: taffy::AlignItems::CENTER,
                 ..Style::default()
             },
             PaintColor::TRANSPARENT,
@@ -798,7 +798,7 @@ fn centered_grid_item_with_percent_height_and_auto_block_margin_keeps_intrinsic_
                     height: percent(1.0),
                 },
                 max_size: Size {
-                    width: Dimension::auto(),
+                    width: Dimension::auto().into(),
                     height: length(92.0),
                 },
                 margin: Rect {
@@ -1140,7 +1140,7 @@ fn block_percentage_box_sizing_and_min_max_resolve_against_containing_block() {
                 },
                 max_size: Size {
                     width: length(240.0),
-                    height: Dimension::auto(),
+                    height: Dimension::auto().into(),
                 },
                 margin: Rect {
                     left: length(30.0),

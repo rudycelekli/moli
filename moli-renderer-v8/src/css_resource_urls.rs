@@ -1,4 +1,4 @@
-use cssparser::{Parser, ParserInput, Token, UnicodeRange};
+use cssparser::{Parser, Token, UnicodeRange};
 use moli_crypto::sha256_hex;
 use moli_css_parse::{
     DeclarationParseOptions, parse_declaration_list, parse_font_face_rule_view_with_stylo,
@@ -288,12 +288,12 @@ fn parsed_web_font_face(css_text: &str) -> Option<ParsedWebFontFace> {
 }
 
 fn parse_font_unicode_ranges(value: &str) -> Option<Vec<WebFontUnicodeRange>> {
-    let mut input = ParserInput::new(value);
-    let mut input = Parser::new(&mut input);
+    let input = value;
+    let mut input = Parser::new(input);
     input
         .parse_comma_separated(|input| {
             let range = UnicodeRange::parse(input)?;
-            Ok::<_, cssparser::ParseError<'_, ()>>(WebFontUnicodeRange::new(range.start, range.end))
+            Ok::<_, cssparser::ParseError<()>>(WebFontUnicodeRange::new(range.start, range.end))
         })
         .ok()
 }
@@ -354,8 +354,8 @@ fn parse_css_angle_degrees(value: &str) -> Option<f32> {
 }
 
 fn preferred_font_source_url(source: &str, base_url: &Url) -> Option<Url> {
-    let mut input = ParserInput::new(source);
-    let mut input = Parser::new(&mut input);
+    let input = source;
+    let mut input = Parser::new(input);
     let mut candidate_url: Option<String> = None;
     let mut candidate_format_is_supported = true;
     while let Ok(token) = input.next_including_whitespace_and_comments().cloned() {
@@ -371,19 +371,19 @@ fn preferred_font_source_url(source: &str, base_url: &Url) -> Option<Url> {
             Token::Function(name) if name.eq_ignore_ascii_case("url") => {
                 let _ = input.parse_nested_block(|input| {
                     candidate_url = css_url_function_value(input);
-                    Ok::<(), cssparser::ParseError<'_, ()>>(())
+                    Ok::<(), cssparser::ParseError<()>>(())
                 });
             }
             Token::Function(name) if name.eq_ignore_ascii_case("format") => {
                 let _ = input.parse_nested_block(|input| {
                     candidate_format_is_supported = font_format_function_is_supported(input);
-                    Ok::<(), cssparser::ParseError<'_, ()>>(())
+                    Ok::<(), cssparser::ParseError<()>>(())
                 });
             }
             Token::Function(_) | Token::ParenthesisBlock | Token::SquareBracketBlock => {
                 let _ = input.parse_nested_block(|input| {
                     skip_css_block(input);
-                    Ok::<(), cssparser::ParseError<'_, ()>>(())
+                    Ok::<(), cssparser::ParseError<()>>(())
                 });
             }
             _ => {}
@@ -394,7 +394,7 @@ fn preferred_font_source_url(source: &str, base_url: &Url) -> Option<Url> {
         .and_then(|url| resolve_font_source_url(&url, base_url))
 }
 
-fn css_url_function_value<'i, 't>(input: &mut Parser<'i, 't>) -> Option<String> {
+fn css_url_function_value<'i>(input: &mut Parser<'i>) -> Option<String> {
     while let Ok(token) = input.next_including_whitespace_and_comments().cloned() {
         match token {
             Token::WhiteSpace(_) | Token::Comment(_) => {}
@@ -407,7 +407,7 @@ fn css_url_function_value<'i, 't>(input: &mut Parser<'i, 't>) -> Option<String> 
     None
 }
 
-fn font_format_function_is_supported<'i, 't>(input: &mut Parser<'i, 't>) -> bool {
+fn font_format_function_is_supported<'i>(input: &mut Parser<'i>) -> bool {
     let mut saw_format = false;
     while let Ok(token) = input.next_including_whitespace_and_comments().cloned() {
         let value = match token {
@@ -446,7 +446,7 @@ fn resolve_font_source_url(raw_url: &str, base_url: &Url) -> Option<Url> {
     matches!(url.scheme(), "http" | "https" | "data" | "blob").then_some(url)
 }
 
-fn skip_css_block<'i, 't>(input: &mut Parser<'i, 't>) {
+fn skip_css_block<'i>(input: &mut Parser<'i>) {
     while let Ok(token) = input.next_including_whitespace_and_comments().cloned() {
         match token {
             Token::Function(_)
@@ -455,7 +455,7 @@ fn skip_css_block<'i, 't>(input: &mut Parser<'i, 't>) {
             | Token::CurlyBracketBlock => {
                 let _ = input.parse_nested_block(|input| {
                     skip_css_block(input);
-                    Ok::<(), cssparser::ParseError<'_, ()>>(())
+                    Ok::<(), cssparser::ParseError<()>>(())
                 });
             }
             _ => {}

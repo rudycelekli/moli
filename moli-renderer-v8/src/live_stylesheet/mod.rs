@@ -6,7 +6,7 @@ use std::{
     sync::{Arc as StdArc, Weak as StdWeak, atomic::AtomicBool},
 };
 
-use cssparser::{Parser, ParserInput, SourceLocation, Token};
+use cssparser::{Parser, SourceLocation, Token};
 use parking_lot::Mutex;
 use selectors::SelectorList;
 use style::stylesheets::keyframes_rule::{Keyframe, KeyframeSelectors, KeyframesRule};
@@ -699,8 +699,8 @@ fn css_rule_insert_error(error: RulesMutateError) -> CssRuleInsertError {
 }
 
 fn css_text_starts_with_at_keyword(css_text: &str, expected: &str) -> bool {
-    let mut input = ParserInput::new(css_text);
-    let mut parser = Parser::new(&mut input);
+    let input = css_text;
+    let mut parser = Parser::new(input);
     loop {
         match parser.next_including_whitespace_and_comments() {
             Ok(Token::WhiteSpace(_) | Token::Comment(_)) => {}
@@ -797,8 +797,8 @@ fn decode_data_stylesheet(url: &url::Url) -> Option<String> {
 }
 
 fn parse_keyframe_selectors(selector_text: &str) -> Result<KeyframeSelectors, CssRuleInsertError> {
-    let mut input = ParserInput::new(selector_text);
-    let mut input = Parser::new(&mut input);
+    let input = selector_text;
+    let mut input = Parser::new(input);
     input
         .parse_entirely(KeyframeSelectors::parse)
         .map_err(|_| CssRuleInsertError::Syntax)

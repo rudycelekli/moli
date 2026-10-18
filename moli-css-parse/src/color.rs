@@ -1,8 +1,8 @@
 //! CSS color parsing helpers shared by HTML and CSS observable surfaces.
 
-use cssparser::{Parser, ParserInput};
+use cssparser::Parser;
 use style::{
-    color::AbsoluteColor,
+    color::{AbsoluteColor, ColorSpace},
     context::QuirksMode,
     custom_properties::AttrTaint,
     parser::{Parse, ParserContext},
@@ -38,7 +38,7 @@ pub fn parse_css_color_to_srgb_bytes(value: &str) -> Option<[u8; 4]> {
             .ok()?
             .resolve_to_absolute(&AbsoluteColor::BLACK),
     };
-    Some(absolute.to_nscolor().to_le_bytes())
+    Some(absolute_srgb_bytes(absolute))
 }
 
 /// Resolve a CSS system-color keyword through the headless Servo light
@@ -47,7 +47,7 @@ pub fn css_system_color_srgb(value: &str) -> Option<(u8, u8, u8)> {
     let Color::System(system) = parse_specified_color(value)? else {
         return None;
     };
-    let [red, green, blue, _alpha] = system_color_absolute(system).to_nscolor().to_le_bytes();
+    let [red, green, blue, _alpha] = absolute_srgb_bytes(system_color_absolute(system));
     Some((red, green, blue))
 }
 
@@ -68,8 +68,8 @@ pub fn parse_css_color_scheme_flags(value: &str) -> Option<ColorSchemeFlags> {
         None,
         AttrTaint::default(),
     );
-    let mut input = ParserInput::new(value);
-    Parser::new(&mut input)
+    let input = value;
+    Parser::new(input)
         .parse_entirely(|input| ColorScheme::parse(&context, input))
         .ok()
         .map(|scheme| scheme.bits)
@@ -88,8 +88,8 @@ fn parse_specified_color(value: &str) -> Option<Color> {
         None,
         AttrTaint::default(),
     );
-    let mut input = ParserInput::new(value);
-    Parser::new(&mut input)
+    let input = value;
+    Parser::new(input)
         .parse_entirely(|input| Color::parse(&context, input))
         .ok()
 }
@@ -137,6 +137,13 @@ fn system_color_absolute(system: SystemColor) -> AbsoluteColor {
         SystemColor::Mark => (255, 235, 59),
     };
     AbsoluteColor::srgb_legacy(red, green, blue, 1.0)
+}
+
+fn absolute_srgb_bytes(color: AbsoluteColor) -> [u8; 4] {
+    color
+        .to_color_space(ColorSpace::Srgb)
+        .raw_components()
+        .map(|component| (component * 255.0).round() as u8)
 }
 
 #[cfg(test)]

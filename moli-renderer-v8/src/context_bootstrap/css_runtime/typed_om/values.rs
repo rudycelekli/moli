@@ -173,19 +173,19 @@ pub(super) fn style_value_from_text<'s>(
 }
 
 fn parse_single_keyword_value(text: &str) -> Option<String> {
-    let mut input = ParserInput::new(text);
-    let mut parser = Parser::new(&mut input);
+    let input = text;
+    let mut parser = Parser::new(input);
     parser
         .parse_entirely(|input| match input.next()?.clone() {
             Token::Ident(keyword) => Ok(keyword.to_string()),
-            _ => Err(input.new_custom_error::<(), ()>(())),
+            _ => Err(cssparser::ParseError::<()>::custom(())),
         })
         .ok()
 }
 
 fn parse_single_unit_value(text: &str) -> Option<(f64, String)> {
-    let mut input = ParserInput::new(text);
-    let mut parser = Parser::new(&mut input);
+    let input = text;
+    let mut parser = Parser::new(input);
     parser
         .parse_entirely(|input| {
             let token = input.next()?.clone();
@@ -197,11 +197,11 @@ fn parse_single_unit_value(text: &str) -> Option<(f64, String)> {
                 Token::Dimension { value, unit, .. } => {
                     let unit = unit.to_ascii_lowercase();
                     if normalize_unit_name(&unit).is_none() {
-                        return Err(input.new_custom_error::<(), ()>(()));
+                        return Err(cssparser::ParseError::<()>::custom(()));
                     }
                     Ok((f64::from(value), unit))
                 }
-                _ => Err(input.new_custom_error::<(), ()>(())),
+                _ => Err(cssparser::ParseError::<()>::custom(())),
             }
         })
         .ok()

@@ -21,9 +21,9 @@ base64 = "0.22"
 brotlic = "0.8.2"
 bytes = "1"
 crossbeam-channel = "0.5.15"
-cssparser = "0.37"
+cssparser = "0.38"
 data-url = "0.3.2"
-dom = { package = "stylo_dom", version = "0.20" }
+dom = { package = "stylo_dom", version = "0.22" }
 encoding_rs = "0.8"
 flate2 = { version = "1.1.9", default-features = false, features = ["zlib"] }
 euclid = "0.22"
@@ -31,9 +31,9 @@ kurbo = "0.13.1"
 futures-util = "0.3.31"
 precomputed-hash = "0.1"
 percent-encoding = "2.3"
-selectors = "0.40"
-stylo = "0.20"
-stylo_static_prefs = "0.20"
+selectors = "0.41"
+stylo = "0.22"
+stylo_static_prefs = "0.22"
 moli-action-window = { path = "../moli-action-window" }
 moli-broadcast-channel = { path = "../moli-broadcast-channel" }
 moli-browser-profile = { path = "../moli-browser-profile" }
@@ -98,12 +98,12 @@ curl = { version = "0.4.51", default-features = false, features = ["brotli", "ht
 http = "1"
 httpdate = "1.0.3"
 html-escape = "0.2.13"
-html5ever = "0.39.0"
+html5ever = "0.40"
 hashlink = "0.12.2"
 indexmap = "2.14.2"
 parking_lot = "0.12"
 fastrand = "2.3.0"
-markup5ever = "0.39.0"
+markup5ever = "0.40"
 xml5ever = "0.39.0"
 serde = { version = "1.0.228", features = ["derive"] }
 serde_json = { version = "1.0.145", features = ["raw_value"] }
@@ -118,7 +118,7 @@ tracing = "0.1.41"
 url = "2.5.7"
 uuid = { version = "1.23.1", default-features = false }
 widestring = "1.2.1"
-style_traits = { package = "stylo_traits", version = "0.20" }
+style_traits = { package = "stylo_traits", version = "0.22" }
 xmlparser = "0.13.6"
 typed-num = { version = "0.3.0", default-features = false, features = ["serde"] }
 wasm_dep_analyzer = { git = "https://github.com/ldm0/wasm_dep_analyzer", branch = "moli0" }

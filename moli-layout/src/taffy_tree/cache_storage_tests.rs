@@ -31,9 +31,9 @@ fn input() -> LayoutInput {
             width: Some(60.0),
             height: Some(20.0),
         },
-        definite_dimensions: Size {
-            width: Some(60.0),
-            height: Some(20.0),
+        known_dimensions_are_definite: Size {
+            width: true,
+            height: true,
         },
         parent_size: Size {
             width: Some(240.0),

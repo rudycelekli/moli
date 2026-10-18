@@ -11,9 +11,9 @@
 
 [package]
 edition = "2021"
-rust-version = "1.71.0"
+rust-version = "1.85"
 name = "xml5ever"
-version = "0.39.0"
+version = "0.40.0"
 authors = ["The xml5ever project developers"]
 build = false
 exclude = ["xml5lib-tests/*"]
@@ -64,7 +64,7 @@ harness = false
 version = "0.4"
 
 [dependencies.markup5ever]
-version = "0.39"
+version = "0.40"
 
 [dev-dependencies.criterion]
 version = "0.8"
