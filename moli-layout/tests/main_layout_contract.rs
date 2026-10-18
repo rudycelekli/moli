@@ -710,6 +710,53 @@ fn grid_item_placement_and_self_alignment_use_the_selected_grid_area() {
 }
 
 #[test]
+fn native_form_controls_stretch_under_normal_grid_alignment() {
+    use moli_layout::{LayoutFormControlKind, LayoutInputControlKind};
+    for kind in [
+        LayoutInputControlKind::Checkbox,
+        LayoutInputControlKind::Radio,
+        LayoutInputControlKind::Range,
+    ] {
+        let mut control = FixtureNode::html("control", "input", Vec::new());
+        control.semantics = LayoutElementSemantics::new(
+            LayoutNamespace::Html,
+            "input",
+            LayoutElementCategory::FormControl(LayoutFormControlKind::Input(kind)),
+            Some(LayoutReplacedKind::FormControl),
+        );
+        let source = FixtureSource {
+            nodes: vec![FixtureNode::div("grid", vec![1]), control],
+        };
+        let mut styles = FixtureStyles::default();
+        styles.0.insert(
+            0,
+            resolved(
+                LayoutDisplay::Grid,
+                Style {
+                    display: Display::Grid,
+                    size: Size {
+                        width: length(50.0),
+                        height: length(50.0),
+                    },
+                    grid_template_columns: vec![length(50.0)],
+                    grid_template_rows: vec![length(50.0)],
+                    ..Style::default()
+                },
+                PaintColor::TRANSPARENT,
+            ),
+        );
+        styles
+            .0
+            .insert(1, resolved(LayoutDisplay::Block, Style::default(), RED));
+        let snapshot = render(&source, &mut styles, PaintViewport::new(100, 100, 1.0));
+        assert_rect(
+            solid_rect(&snapshot, RED),
+            PaintRect::new(0.0, 0.0, 50.0, 50.0),
+        );
+    }
+}
+
+#[test]
 fn absolute_grid_items_use_retained_track_areas_in_both_directions() {
     for (direction, x) in [
         (taffy::Direction::Ltr, 135.0),

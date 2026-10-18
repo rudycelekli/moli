@@ -2121,8 +2121,11 @@ impl ResolvedLayoutStyle {
         }
     }
 
-    pub(crate) fn mark_replaced(&mut self) {
-        self.taffy.item_is_replaced = true;
+    pub(crate) fn mark_replaced(&mut self, is_form_control: bool) {
+        // Taffy distinguishes native controls from images for normal grid/OOF
+        // stretch. Both remain compressible replaced leaves in block layout.
+        self.taffy.item_is_replaced = !is_form_control;
+        self.taffy.item_is_compressible_replaced = is_form_control;
     }
 
     pub(crate) fn resolved_aspect_ratio(

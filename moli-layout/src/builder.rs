@@ -138,7 +138,9 @@ where
             root_style.force_display_none();
         }
         if root_semantics.is_replaced() {
-            root_style.mark_replaced();
+            root_style.mark_replaced(
+                root_semantics.replaced == Some(crate::LayoutReplacedKind::FormControl),
+            );
         } else if matches!(
             root_semantics.category,
             crate::LayoutElementCategory::FormControl(crate::LayoutFormControlKind::Button)
@@ -306,7 +308,9 @@ where
             }
             let metrics = self.source.replaced_metrics(source_node);
             if semantics.is_replaced() {
-                style.mark_replaced();
+                style.mark_replaced(
+                    semantics.replaced == Some(crate::LayoutReplacedKind::FormControl),
+                );
             } else if matches!(
                 semantics.category,
                 crate::LayoutElementCategory::FormControl(crate::LayoutFormControlKind::Button)
