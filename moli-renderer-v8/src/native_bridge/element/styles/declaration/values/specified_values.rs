@@ -716,12 +716,14 @@ pub(super) fn normalize_cssom_font_family_value(value: &str) -> Option<String> {
 
 fn font_family_name_can_serialize_unquoted(name: &str) -> bool {
     let lowered = name.to_ascii_lowercase();
-    if font_family_name_is_reserved(&lowered) {
+    if font_family_name_is_reserved(&lowered)
+        || name.chars().any(|ch| ch.is_whitespace() && ch != ' ')
+    {
         return false;
     }
-    // Like Blink's SerializeFontFamily, only one unescaped CSS identifier
-    // may lose its quotes, not a whitespace-separated identifier sequence.
-    font_family_ident_is_valid(name)
+    // A family name may serialize as CSS identifiers joined by single spaces.
+    // Empty segments and names that need identifier escapes retain their quotes.
+    name.split(' ').all(font_family_ident_is_valid)
 }
 
 fn font_family_name_is_reserved(lowered: &str) -> bool {
