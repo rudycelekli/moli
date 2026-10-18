@@ -261,3 +261,43 @@ fn wrapped_vertical_flex_keeps_padding_in_its_scroll_extent() -> Result<()> {
     }
     Ok(())
 }
+
+#[test]
+fn wrapped_flex_distribution_keeps_child_positions_for_visible_and_scroll_overflow() -> Result<()> {
+    let mut body = String::from("<!doctype html><body>");
+    for (mode, direction, flow) in [
+        ("horizontal-tb", "ltr", "row"),
+        ("vertical-rl", "rtl", "column"),
+    ] {
+        for overflow in ["visible", "scroll"] {
+            for align in ["stretch", "space-between", "space-around", "space-evenly"] {
+                body.push_str(&format!("<div id='flex-{mode}-{overflow}-{align}' data-flex-probe style='display:flex;writing-mode:{mode};direction:{direction};flex-flow:{flow} wrap-reverse;width:100px;height:100px;overflow:{overflow};border:3px solid;padding:10px;gap:10px;align-items:start;align-content:{align};margin-top:300px'>"));
+                for _ in 0..3 {
+                    body.push_str("<div style='min-width:110px;min-height:110px'></div>");
+                }
+                body.push_str("</div>");
+            }
+        }
+    }
+    let expression = r#"JSON.stringify(Object.fromEntries([...document.querySelectorAll('[data-flex-probe]')].map(e => {const top=e.getBoundingClientRect().top;return [e.id,Object.fromEntries([...e.children].map((child,i)=>['y'+i,child.getBoundingClientRect().top-top]))]})))"#;
+    let value = run_layout(&body, expression, false)?;
+    for mode in ["horizontal-tb", "vertical-rl"] {
+        for overflow in ["visible", "scroll"] {
+            for align in ["stretch", "space-between", "space-around", "space-evenly"] {
+                // Fixed Chromium control values distinguish flex-start fallback from
+                // safe center, including the opposite cross flow of vertical RTL.
+                let expected = match (mode, align) {
+                    ("horizontal-tb", "stretch" | "space-between") => [3.0, -117.0, -237.0],
+                    ("horizontal-tb", _) => [253.0, 133.0, 13.0],
+                    (_, "stretch" | "space-between") => [13.0, 133.0, 253.0],
+                    _ => [-237.0, -117.0, 3.0],
+                };
+                let id = format!("flex-{mode}-{overflow}-{align}");
+                for (index, y) in expected.into_iter().enumerate() {
+                    assert_dimension(&value, &id, &format!("y{index}"), y);
+                }
+            }
+        }
+    }
+    Ok(())
+}
