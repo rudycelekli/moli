@@ -3803,9 +3803,13 @@ async fn html_image_decode_keeps_child_element_owner_separate_from_parent_releva
         r#"
 (() => {
   const frame = document.getElementById("decode-owner-frame");
-  const image = frame.contentDocument.createElement("img");
+  const image = document.createElement("img");
   image.src = "/images/green.png?decode-cross-realm";
   frame.contentDocument.body.appendChild(image);
+  if (image.ownerDocument !== frame.contentDocument ||
+      Object.getPrototypeOf(image) !== HTMLImageElement.prototype) {
+    throw new Error("adoption must separate the node document from the image realm");
+  }
   const promise = HTMLImageElement.prototype.decode.call(image);
   globalThis.__lmCrossRealmDecode = {
     promiseUsesParentPrototype: Object.getPrototypeOf(promise) === Promise.prototype,

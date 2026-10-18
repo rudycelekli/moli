@@ -1485,6 +1485,14 @@ pub(super) struct SvgScriptElementPrototypeDeclaration {
 #[webapi(interface = web_api_interfaces::SVGImageElement, enumerable)]
 pub(super) struct SvgImageElementPrototypeDeclaration {
     #[webapi(
+        method,
+        length = 0,
+        callback = image_decode_callback,
+        receiver = web_api_interfaces::SVGImageElement::is_instance,
+        returns_promise
+    )]
+    decode: (),
+    #[webapi(
         accessor_property = "fetchPriority",
         getter = svg_image_fetch_priority_getter_function,
         setter = svg_image_fetch_priority_setter_function
