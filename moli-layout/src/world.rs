@@ -1,7 +1,7 @@
 use std::{collections::HashMap, fmt::Debug, hash::Hash, num::NonZeroU32, sync::Arc};
 
 use style::Atom;
-use taffy::{Cache, Layout, Point, Style};
+use taffy::{Cache, DetailedLayoutInfo, Layout, Point, Style};
 
 use crate::{
     LayoutCssImageReference, LayoutElementSemantics, LayoutError, LayoutPoint, LayoutPseudo,
@@ -639,6 +639,8 @@ where
     /// Used Grid tracks for actual owners. Their canonical result is frozen
     /// for CSSOM before this pass-local map is released.
     pub(crate) resolved_grid_tracks: HashMap<LayoutBoxId, LayoutResolvedGridTracks>,
+    /// Native track positions and names read by Taffy's out-of-flow pass.
+    pub(crate) native_grid_details: HashMap<LayoutBoxId, DetailedLayoutInfo<Atom>>,
     pub(crate) source_mapping: HashMap<N, LayoutBoxId>,
     pub(crate) display_contents_mapping: HashMap<N, Vec<LayoutBoxId>>,
     pub(crate) root: LayoutBoxId,
@@ -669,6 +671,7 @@ where
             box_caches: Vec::new(),
             collapsed_table_borders: HashMap::new(),
             resolved_grid_tracks: HashMap::new(),
+            native_grid_details: HashMap::new(),
             source_mapping: HashMap::new(),
             display_contents_mapping: HashMap::new(),
             root: LayoutBoxId::from_index(0),

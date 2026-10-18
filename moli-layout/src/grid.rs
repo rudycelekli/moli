@@ -8,7 +8,7 @@ use crate::{
 
 pub(crate) fn project_resolved_grid_tracks(
     style: &taffy::Style<Atom>,
-    detailed: taffy::DetailedGridInfo<Atom>,
+    detailed: &taffy::DetailedGridInfo<Atom>,
 ) -> Option<LayoutResolvedGridTracks> {
     let row_line_names = expanded_line_names(
         &style.grid_template_rows,
@@ -23,13 +23,13 @@ pub(crate) fn project_resolved_grid_tracks(
         usize::from(detailed.columns.auto_repetitions),
     )?;
     Some(LayoutResolvedGridTracks {
-        rows: project_tracks(detailed.rows, row_line_names)?,
-        columns: project_tracks(detailed.columns, column_line_names)?,
+        rows: project_tracks(&detailed.rows, row_line_names)?,
+        columns: project_tracks(&detailed.columns, column_line_names)?,
     })
 }
 
 fn project_tracks(
-    tracks: taffy::DetailedGridTracksInfo<Atom>,
+    tracks: &taffy::DetailedGridTracksInfo<Atom>,
     explicit_line_names: Vec<Vec<Atom>>,
 ) -> Option<LayoutResolvedGridTrackList> {
     let track_count = usize::from(tracks.negative_implicit_tracks)
@@ -42,7 +42,7 @@ fn project_tracks(
     }
     let used_track_sizes = tracks
         .positions
-        .into_iter()
+        .iter()
         .map(|position| to_blink_layout_unit(position.end - position.start))
         .collect::<Option<Vec<_>>>()?;
     Some(LayoutResolvedGridTrackList {

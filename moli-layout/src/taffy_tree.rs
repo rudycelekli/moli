@@ -139,6 +139,7 @@ where
     N: Copy + Debug + Eq + Hash,
 {
     world.resolved_grid_tracks.clear();
+    world.native_grid_details.clear();
     for index in 0..world.boxes.len() {
         world.clear_layout_caches(LayoutBoxId::from_index(index));
         let layout_box = &mut world.boxes[index];
@@ -1907,25 +1908,33 @@ where
         node_id: NodeId,
         detailed_grid_info: DetailedGridInfo<Atom>,
     ) {
-        let layout_box = &self.boxes[LayoutBoxId::from_taffy(node_id).index()];
-        if layout_box
+        let id = LayoutBoxId::from_taffy(node_id);
+        let layout_box = &self.boxes[id.index()];
+        let expose_to_cssom = !layout_box
             .capability_diagnostics
             .contains(&LayoutCapabilityDiagnostic::GridTemplateModeDeferred)
             // The current backend reports detailed Grid tracks in physical
             // axes. Publishing them for a vertical container would expose its
             // width as the used `grid-template-columns` inline size. Keep the
             // computed value until logical Grid constraints land in Taffy.
-            || !layout_box.style.uses_horizontal_writing_mode()
-        {
-            return;
+            && layout_box.style.uses_horizontal_writing_mode();
+        let resolved_grid_tracks = expose_to_cssom
+            .then(|| {
+                crate::grid::project_resolved_grid_tracks(
+                    &layout_box.style.taffy,
+                    &detailed_grid_info,
+                )
+            })
+            .flatten();
+        // The native OOF pass needs these positions even when the browser's
+        // CSSOM projection deliberately retains the computed track value.
+        self.native_grid_details.insert(
+            id,
+            taffy::DetailedLayoutInfo::Grid(Box::new(detailed_grid_info)),
+        );
+        if let Some(tracks) = resolved_grid_tracks {
+            self.resolved_grid_tracks.insert(id, tracks);
         }
-        let Some(resolved_grid_tracks) =
-            crate::grid::project_resolved_grid_tracks(&layout_box.style.taffy, detailed_grid_info)
-        else {
-            return;
-        };
-        self.resolved_grid_tracks
-            .insert(LayoutBoxId::from_taffy(node_id), resolved_grid_tracks);
     }
 }
 
@@ -3269,6 +3278,14 @@ impl<N: Copy + Debug + Eq + Hash> taffy::LayoutContainingBlock for LayoutWorld<N
         Self: 'a;
     fn get_oof_item_style(&self, node: NodeId) -> Self::OofItemStyle<'_> {
         self.get_core_container_style(node)
+    }
+    fn get_detailed_layout_info(&self, node: NodeId) -> &taffy::DetailedLayoutInfo<Atom> {
+        if self.is_viewport_taffy_node(node) {
+            return &taffy::DetailedLayoutInfo::None;
+        }
+        self.native_grid_details
+            .get(&LayoutBoxId::from_taffy(node))
+            .unwrap_or(&taffy::DetailedLayoutInfo::None)
     }
     fn get_containing_block_claims(&self, _: NodeId) -> taffy::ContainingBlockClaims {
         // prepare_layout_tree has already attached every positioned box to

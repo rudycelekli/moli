@@ -710,6 +710,73 @@ fn grid_item_placement_and_self_alignment_use_the_selected_grid_area() {
 }
 
 #[test]
+fn absolute_grid_items_use_retained_track_areas_in_both_directions() {
+    for (direction, x) in [
+        (taffy::Direction::Ltr, 135.0),
+        (taffy::Direction::Rtl, 95.0),
+    ] {
+        let source = FixtureSource {
+            nodes: vec![
+                FixtureNode::div("grid", vec![1]),
+                FixtureNode::div("positioned", Vec::new()),
+            ],
+        };
+        let mut styles = FixtureStyles::default();
+        styles.0.insert(
+            0,
+            resolved(
+                LayoutDisplay::Grid,
+                Style {
+                    display: Display::Grid,
+                    direction,
+                    box_sizing: BoxSizing::ContentBox,
+                    size: Size {
+                        width: length(400.0),
+                        height: length(300.0),
+                    },
+                    padding: Rect::length(10.0),
+                    border: Rect::length(5.0),
+                    gap: Size {
+                        width: length(20.0),
+                        height: length(10.0),
+                    },
+                    grid_template_columns: vec![length(100.0), length(200.0)],
+                    grid_template_rows: vec![length(50.0), length(100.0)],
+                    ..Style::default()
+                },
+                PaintColor::TRANSPARENT,
+            )
+            .with_position(LayoutPosition::Relative),
+        );
+        styles.0.insert(
+            1,
+            resolved(
+                LayoutDisplay::Block,
+                Style {
+                    inset: Rect::length(0.0),
+                    grid_column: Line {
+                        start: line(2),
+                        end: line(3),
+                    },
+                    grid_row: Line {
+                        start: line(2),
+                        end: line(3),
+                    },
+                    ..Style::default()
+                },
+                RED,
+            )
+            .with_position(LayoutPosition::Absolute),
+        );
+        let snapshot = render(&source, &mut styles, PaintViewport::new(800, 600, 1.0));
+        assert_rect(
+            solid_rect(&snapshot, RED),
+            PaintRect::new(x, 75.0, 200.0, 100.0),
+        );
+    }
+}
+
+#[test]
 fn grid_container_justify_items_center_shrink_wraps_an_auto_sized_item() {
     let source = FixtureSource {
         nodes: vec![
