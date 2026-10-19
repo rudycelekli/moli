@@ -108,11 +108,9 @@ struct RtcPeerConnectionObjectDeclaration<'scope> {
 }
 
 #[derive(WebApiObject)]
-#[webapi(plain)]
+#[webapi(plain, data_properties, enumerable)]
 struct RtcSessionDescriptionInitDeclaration<'scope> {
-    #[webapi(data_property, enumerable)]
     r#type: v8::Local<'scope, v8::String>,
-    #[webapi(data_property, enumerable)]
     sdp: v8::Local<'scope, v8::String>,
 }
 

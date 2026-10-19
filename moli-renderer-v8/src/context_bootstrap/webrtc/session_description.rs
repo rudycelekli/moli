@@ -1,26 +1,50 @@
-use super::RtcSessionDescriptionInitDeclaration;
+use super::SdpType;
 use crate::web_api_interfaces;
 use crate::{
-    util::{
-        callback_data_index_value, callback_data_item, get_private_value, throw_type_error, v8str,
-    },
-    webidl,
+    util::{callback_data_index_value, callback_data_item, throw_type_error, v8str},
+    webidl::{self, WebIdlDictionarySerialize},
 };
 use moli_webapi_declare::{
-    WebApiFunctionTemplate, WebApiObject, initialize_web_api_constructor_receiver,
+    WebApiFunctionTemplate, WebApiValue, initialize_web_api_constructor_receiver,
 };
 
-const DESCRIPTION_TYPE_SLOT: &str = "__moliRtcSessionDescriptionType";
-const DESCRIPTION_SDP_SLOT: &str = "__moliRtcSessionDescriptionSdp";
-const DESCRIPTION_SLOTS: &[&str] = &[DESCRIPTION_TYPE_SLOT, DESCRIPTION_SDP_SLOT];
+const DESCRIPTION_SLOT: &str = "__moliRtcSessionDescription";
+const DESCRIPTION_MEMBERS: &[&str] = &["type", "sdp"];
+type DescriptionSnapshot<'s> = webidl::DictionarySnapshot<'s, SessionDescriptionInit>;
 
-#[derive(WebApiObject)]
-#[webapi(interface = web_api_interfaces::RTCSessionDescription)]
-struct SessionDescriptionObjectDeclaration<'scope> {
-    #[webapi(slot = DESCRIPTION_TYPE_SLOT)]
-    r#type: v8::Local<'scope, v8::String>,
-    #[webapi(slot = DESCRIPTION_SDP_SLOT)]
-    sdp: v8::Local<'scope, v8::String>,
+#[derive(webidl::WebIdlDictionary)]
+#[webidl(prefix = "RTCSessionDescriptionInit", snapshot)]
+struct SessionDescriptionInit {
+    #[webidl(converter = "raw", default = webidl::DomString16(Vec::new()))]
+    #[webidl(snapshot_order = 1)]
+    sdp: webidl::DomString16,
+    // Input conversion is lexical; the legacy JSON result keeps type before sdp.
+    #[webidl(required, converter = "enum")]
+    #[webidl(snapshot_order = 0)]
+    r#type: SdpType,
+}
+
+#[derive(webidl::WebIdlArgs)]
+#[webidl(prefix = "RTCSessionDescription")]
+struct SessionDescriptionArgs {
+    #[webidl(required, dictionary)]
+    init: SessionDescriptionInit,
+}
+
+impl SessionDescriptionInit {
+    fn from_native_parts<'s>(
+        scope: &mut v8::PinScope<'s, '_>,
+        kind: v8::Local<'s, v8::String>,
+        sdp: v8::Local<'s, v8::String>,
+    ) -> Self {
+        let mut units = vec![0; sdp.length()];
+        sdp.write_v2(scope, 0, &mut units, v8::WriteFlags::empty());
+        Self {
+            r#type: <SdpType as webidl::WebIdlEnum>::parse_token(&kind.to_rust_string_lossy(scope))
+                .expect("native RTCSdpType"),
+            sdp: webidl::DomString16(units),
+        }
+    }
 }
 
 #[derive(WebApiFunctionTemplate)]
@@ -62,7 +86,10 @@ pub(super) fn from_parts<'s>(
     if object.set_prototype(scope, prototype.into()) != Some(true) {
         return None;
     }
-    SessionDescriptionObjectDeclaration::new(kind, sdp)
+    SessionDescriptionInit::from_native_parts(scope, kind, sdp)
+        .to_snapshot(scope)?
+        .store_private(scope, object, DESCRIPTION_SLOT)?;
+    web_api_interfaces::RTCSessionDescription::DESCRIPTOR
         .initialize(scope, object)
         .ok()?;
     Some(object)
@@ -77,65 +104,18 @@ pub(in crate::context_bootstrap) fn rtc_session_description_constructor_callback
         throw_type_error(scope, "RTCSessionDescription constructor requires 'new'.");
         return;
     }
-    let dictionary = match webidl::dictionary_value(
-        args.get(0),
-        webidl::Context::argument("RTCSessionDescription", 1),
-    ) {
-        Ok(Some(dictionary)) => dictionary,
-        Ok(None) => {
-            throw_type_error(scope, "RTCSessionDescriptionInit requires type.");
-            return;
-        }
-        Err(error) => {
-            webidl::throw_error(scope, &error);
-            return;
-        }
-    };
-    // WebIDL converts dictionary members in lexical order, including defaults.
-    // SDP is a DOMString: retain the V8 string, including lone UTF-16 surrogates.
-    // Its contents are not validated by this legacy data-model constructor.
-    let Some(raw_sdp) = dictionary.get(scope, v8str(scope, "sdp").into()) else {
+    let Some(parsed) = webidl::parse_args::<SessionDescriptionArgs>(scope, &args) else {
         return;
     };
-    let sdp = if raw_sdp.is_undefined() {
-        v8str(scope, "")
-    } else {
-        if raw_sdp.is_symbol() {
-            throw_type_error(scope, "Cannot convert a Symbol to a DOMString.");
-            return;
-        }
-        let Some(sdp) = raw_sdp.to_string(scope) else {
-            return;
-        };
-        sdp
-    };
-    let Some(raw_type) = dictionary.get(scope, v8str(scope, "type").into()) else {
-        return;
-    };
-    if raw_type.is_undefined() {
-        throw_type_error(scope, "RTCSessionDescriptionInit requires type.");
-        return;
-    }
-    if raw_type.is_symbol() {
-        throw_type_error(scope, "Cannot convert a Symbol to an RTCSdpType.");
-        return;
-    }
-    let Some(kind) = raw_type.to_string(scope) else {
-        return;
-    };
-    if !matches!(
-        kind.to_rust_string_lossy(scope).as_str(),
-        "offer" | "pranswer" | "answer" | "rollback"
-    ) {
-        throw_type_error(scope, "Invalid RTCSdpType.");
-        return;
-    }
     if !initialize_web_api_constructor_receiver(scope, args.this(), "RTCSessionDescription") {
         return;
     }
-    if SessionDescriptionObjectDeclaration::new(kind, sdp)
-        .initialize(scope, args.this())
-        .is_err()
+    let Some(snapshot) = parsed.init.to_snapshot(scope) else {
+        return;
+    };
+    if snapshot
+        .store_private(scope, args.this(), DESCRIPTION_SLOT)
+        .is_none()
     {
         return;
     }
@@ -147,19 +127,31 @@ fn description_attribute_getter<'s>(
     args: v8::FunctionCallbackArguments<'s>,
     mut rv: v8::ReturnValue<'s, v8::Value>,
 ) {
-    let Some(slot) = callback_data_item(
+    let Some(member) = callback_data_item(
         scope,
         &args,
-        DESCRIPTION_SLOTS,
+        DESCRIPTION_MEMBERS,
         "RTCSessionDescription attribute",
     ) else {
         return;
     };
-    if let Some(value) = get_private_value(scope, args.this(), slot) {
+    let record = snapshot(scope, args.this())
+        .to_v8_value(scope)
+        .and_then(|value| v8::Local::<v8::Object>::try_from(value).ok())
+        .expect("native RTCSessionDescription record");
+    if let Some(value) = record.get(scope, v8str(scope, member).into()) {
         rv.set(value);
-    } else {
-        throw_type_error(scope, "Illegal invocation");
     }
+}
+
+fn snapshot<'s>(
+    scope: &mut v8::PinScope<'s, '_>,
+    receiver: v8::Local<'s, v8::Object>,
+) -> DescriptionSnapshot<'s> {
+    let target = moli_webapi_declare::web_api_object_target(scope, receiver)
+        .expect("validated RTCSessionDescription receiver");
+    DescriptionSnapshot::from_private_slot(scope, target, DESCRIPTION_SLOT)
+        .expect("native RTCSessionDescription snapshot")
 }
 
 fn description_to_json_callback<'s>(
@@ -167,18 +159,9 @@ fn description_to_json_callback<'s>(
     args: v8::FunctionCallbackArguments<'s>,
     mut rv: v8::ReturnValue<'s, v8::Value>,
 ) {
-    let Some(kind) = get_private_value(scope, args.this(), DESCRIPTION_TYPE_SLOT)
-        .and_then(|value| v8::Local::<v8::String>::try_from(value).ok())
-    else {
-        throw_type_error(scope, "Illegal invocation");
-        return;
-    };
-    let Some(sdp) = get_private_value(scope, args.this(), DESCRIPTION_SDP_SLOT)
-        .and_then(|value| v8::Local::<v8::String>::try_from(value).ok())
-    else {
-        return;
-    };
-    if let Ok(json) = RtcSessionDescriptionInitDeclaration::new(kind, sdp).bind(scope) {
+    if let Some(json) =
+        snapshot(scope, args.this()).to_js_snapshot(scope, webidl::SnapshotPrototype::Ordinary)
+    {
         rv.set(json.into());
     }
 }
