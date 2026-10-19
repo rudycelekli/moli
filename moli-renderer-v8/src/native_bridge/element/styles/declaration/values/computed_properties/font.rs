@@ -5,11 +5,6 @@ pub(super) fn computed_shorthand(
     handle: DomHandle,
     resolution: StyleResolutionContext<'_>,
 ) -> String {
-    // Servo's font schema excludes this compatibility longhand. It is reset
-    // by font, but a non-initial value cannot be expressed by the shorthand.
-    if resolution.computed_property(runtime, handle, "font-size-adjust") != "none" {
-        return String::new();
-    }
     let mut block = moli_css_parse::CssDeclarationBlock::default();
     for longhand in style::properties::ShorthandId::Font.longhands() {
         let property = longhand.name();
