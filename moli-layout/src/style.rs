@@ -1968,6 +1968,37 @@ impl ResolvedLayoutStyle {
         self.writing_mode.is_horizontal()
     }
 
+    /// Physical axes whose reachable scroll direction points toward negative coordinates.
+    pub(crate) fn reversed_scroll_axes(&self) -> taffy::Point<bool> {
+        let rtl = self.direction == InlineDirection::Rtl;
+        let mut reversed = match self.writing_mode {
+            LayoutWritingMode::HorizontalTb => taffy::Point { x: rtl, y: false },
+            LayoutWritingMode::VerticalRl => taffy::Point { x: true, y: rtl },
+            LayoutWritingMode::VerticalLr => taffy::Point { x: false, y: rtl },
+        };
+        if matches!(
+            self.display,
+            LayoutDisplay::Flex | LayoutDisplay::InlineFlex
+        ) {
+            let row = matches!(
+                self.taffy.flex_direction,
+                taffy::FlexDirection::Row | taffy::FlexDirection::RowReverse
+            );
+            let main_x = row == self.uses_horizontal_writing_mode();
+            let main_reverse = matches!(
+                self.taffy.flex_direction,
+                taffy::FlexDirection::RowReverse | taffy::FlexDirection::ColumnReverse
+            );
+            let cross_reverse = matches!(
+                self.taffy.flex_wrap,
+                taffy::FlexWrap::WrapReverse | taffy::FlexWrap::BalanceReverse
+            );
+            reversed.x ^= if main_x { main_reverse } else { cross_reverse };
+            reversed.y ^= if main_x { cross_reverse } else { main_reverse };
+        }
+        reversed
+    }
+
     pub(crate) const fn vertical_block_start_is_right(&self) -> Option<bool> {
         self.writing_mode.vertical_block_start_is_right()
     }

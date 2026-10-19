@@ -254,15 +254,14 @@ where
     world.finish_numeric_layout_tracking()
 }
 
-/// Converts Taffy's horizontal block-start anchor into the physical edge used
-/// by a vertical writing mode.
+/// Converts Taffy's horizontal block anchors into the physical edges used by
+/// a vertical writing mode.
 ///
-/// Taffy deliberately has no writing-mode input yet. Its block algorithm does
-/// still produce the right border-box size, margins and physical relative
-/// inset, but it chooses the x anchor from CSS `direction`: left for LTR and
+/// Taffy's block algorithm produces physical sizes, margins and relative
+/// insets, but it still chooses the x anchor from CSS `direction`: left for LTR and
 /// right for RTL. In a vertical formatting context, direction controls the
 /// vertical inline axis instead; block-start is always left for `vertical-lr`
-/// and right for `vertical-rl`.
+/// and right for `vertical-rl`. RTL also anchors the inline axis at the bottom.
 ///
 /// Apply this adapter immediately after numeric layout so positioned, sticky,
 /// scroll-overflow, CSSOM and paint all observe the same real box coordinates.
@@ -271,7 +270,7 @@ fn physicalize_vertical_block_flow<N>(world: &mut LayoutWorld<N>)
 where
     N: Copy + Debug + Eq + Hash,
 {
-    let mut adjusted_x = Vec::new();
+    let mut adjusted_locations = Vec::new();
 
     for parent_index in 0..world.boxes.len() {
         let parent = LayoutBoxId::from_index(parent_index);
@@ -292,6 +291,12 @@ where
             - parent_layout.border.right
             - parent_layout.padding.right
             - scrollbar.right;
+        let content_top = parent_layout.border.top + parent_layout.padding.top + scrollbar.top;
+        let content_bottom = parent_layout.size.height
+            - parent_layout.border.bottom
+            - parent_layout.padding.bottom
+            - scrollbar.bottom;
+        let direction = world.boxes[parent_index].style.direction();
         let taffy_anchored_right =
             world.boxes[parent_index].style.taffy.direction == taffy::Direction::Rtl;
 
@@ -317,12 +322,42 @@ where
             } else {
                 left_anchor
             };
-            adjusted_x.push((child, physical_anchor + (layout.location.x - taffy_anchor)));
+            let y = if direction == InlineDirection::Rtl {
+                let relative_y = if child_box.style.position() == crate::LayoutPosition::Relative {
+                    relative_atomic_inset_offset(
+                        &child_box.style.taffy,
+                        Size {
+                            width: content_right - content_left,
+                            height: content_bottom - content_top,
+                        },
+                        direction,
+                    )
+                    .y
+                } else {
+                    0.0
+                };
+                // Mirror the normal-flow inline anchor, while physical top /
+                // bottom margins and relative insets retain their own edges.
+                content_top + content_bottom + layout.margin.top
+                    - layout.margin.bottom
+                    - layout.location.y
+                    - layout.size.height
+                    + 2.0 * relative_y
+            } else {
+                layout.location.y
+            };
+            adjusted_locations.push((
+                child,
+                Point {
+                    x: physical_anchor + (layout.location.x - taffy_anchor),
+                    y,
+                },
+            ));
         }
     }
 
-    for (child, x) in adjusted_x {
-        world.boxes[child.index()].unrounded_layout.location.x = x;
+    for (child, location) in adjusted_locations {
+        world.boxes[child.index()].unrounded_layout.location = location;
     }
 }
 
