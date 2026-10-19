@@ -85,7 +85,8 @@ impl<'s> ToggleEventInit<'s> {
         scope: &mut v8::PinScope<'s, '_>,
         event: v8::Local<'s, v8::Object>,
     ) {
-        self.initialize_snapshot(scope, event).expect("ToggleEvent snapshot");
+        self.initialize_snapshot(scope, event)
+            .expect("ToggleEvent snapshot");
     }
 }
 
@@ -99,7 +100,8 @@ impl<'s> CommandEventInit<'s> {
         scope: &mut v8::PinScope<'s, '_>,
         event: v8::Local<'s, v8::Object>,
     ) {
-        self.initialize_snapshot(scope, event).expect("CommandEvent snapshot");
+        self.initialize_snapshot(scope, event)
+            .expect("CommandEvent snapshot");
     }
 }
 

@@ -96,8 +96,8 @@ mod security_policy;
 mod security_policy_event_init;
 mod service_worker_drain;
 mod session_description;
-mod simple_event_target_handlers;
 mod simple_event_dispatch;
+mod simple_event_target_handlers;
 mod simple_handler_object;
 mod speech_synthesis;
 mod speech_synthesis_events;
@@ -129,4 +129,3 @@ mod window_open_special_targets;
 mod worker_listener_invocation;
 
 mod video_codec_support;
-

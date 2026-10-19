@@ -116,7 +116,13 @@ fn dispatch_simple_event_target_event_with_original_target_collecting_errors<'s>
     } else {
         None
     };
-    if can_invoke && !event_internal_bool_flag(scope, event, crate::context_bootstrap::EVENT_STOP_PROPAGATION_SLOT) {
+    if can_invoke
+        && !event_internal_bool_flag(
+            scope,
+            event,
+            crate::context_bootstrap::EVENT_STOP_PROPAGATION_SLOT,
+        )
+    {
         let ordinary_arguments = [event.into()];
         let handler_arguments = error_arguments
             .as_ref()
@@ -128,12 +134,22 @@ fn dispatch_simple_event_target_event_with_original_target_collecting_errors<'s>
         };
         for capture_phase in [true, false] {
             let result = invoke_simple_event_target_listeners(
-                scope, target, event_type, event, capture_phase, handler_arguments,
-                handler_type, callback_errors.as_deref_mut(),
+                scope,
+                target,
+                event_type,
+                event,
+                capture_phase,
+                handler_arguments,
+                handler_type,
+                callback_errors.as_deref_mut(),
             );
             dispatched |= result.dispatched;
             if event_stop_immediate_propagation(scope, event)
-                || event_internal_bool_flag(scope, event, crate::context_bootstrap::EVENT_STOP_PROPAGATION_SLOT)
+                || event_internal_bool_flag(
+                    scope,
+                    event,
+                    crate::context_bootstrap::EVENT_STOP_PROPAGATION_SLOT,
+                )
             {
                 break;
             }
@@ -172,8 +188,7 @@ pub(crate) fn invoke_simple_event_target_listeners<'s>(
         .iter()
         .filter(|listener| listener.capture == capture_phase)
     {
-        let Some(listener) = listener.prepare_for_invocation(scope, target, event_type)
-        else {
+        let Some(listener) = listener.prepare_for_invocation(scope, target, event_type) else {
             continue;
         };
         let callback_target = crate::context_bootstrap::shared_event_targets::target_in_realm(

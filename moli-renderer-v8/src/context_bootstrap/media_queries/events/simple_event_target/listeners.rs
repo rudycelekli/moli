@@ -6,7 +6,9 @@ use crate::event_listener_args::{
 };
 use crate::event_type::{EventType, EventTypeKey};
 use crate::native_bridge::{WindowExecutionContextIdentity, lightweight_popup_id_from_window};
-use crate::util::{context_host_ptr_from_global_bridge, get_private_value, set_private_value, v8_string};
+use crate::util::{
+    context_host_ptr_from_global_bridge, get_private_value, set_private_value, v8_string,
+};
 use crate::webidl;
 use moli_webapi_declare::WebApiObject;
 
@@ -142,13 +144,11 @@ impl<'s> SimpleObjectEventListenerSnapshot<'s> {
         &self,
         scope: &mut v8::PinScope<'s, '_>,
         target: v8::Local<'s, v8::Object>,
-            event_type: &(impl EventTypeKey + ?Sized),
+        event_type: &(impl EventTypeKey + ?Sized),
     ) -> Option<Self> {
         // Removing and re-adding the same callback creates a different entry.
         // The removed entry must stay inactive in an existing dispatch snapshot.
-        if !simple_object_event_listener_entry_registered(
-            scope, target, event_type, self.entry,
-        ) {
+        if !simple_object_event_listener_entry_registered(scope, target, event_type, self.entry) {
             return None;
         }
         let listener = if self.handler_slot.is_some() {
@@ -217,13 +217,6 @@ impl<'s> SimpleObjectEventListenerSnapshot<'s> {
         self.is_callable
             .then(|| unsafe { v8::Local::<v8::Function>::cast_unchecked(callback) })
     }
-}
-
-pub(crate) fn simple_object_event_target_add_listener<'s>(
-    scope: &mut v8::PinScope<'s, '_>,
-    args: &v8::FunctionCallbackArguments<'s>,
-) {
-    simple_object_event_target_add_listener_for_target(scope, args, args.this());
 }
 
 pub(crate) fn simple_object_event_target_add_listener_for_target<'s>(
@@ -334,13 +327,6 @@ fn simple_object_event_target_register_resolved_listener<'s>(
     if event_type.is_type("message") {
         crate::context_bootstrap::flush_pending_worker_messages_for_listener(scope, target);
     }
-}
-
-pub(crate) fn simple_object_event_target_remove_listener<'s>(
-    scope: &mut v8::PinScope<'s, '_>,
-    args: &v8::FunctionCallbackArguments<'s>,
-) {
-    simple_object_event_target_remove_listener_for_target(scope, args, args.this());
 }
 
 pub(crate) fn simple_object_event_target_remove_listener_for_target<'s>(
@@ -465,7 +451,11 @@ pub(in crate::context_bootstrap::media_queries::events::simple_event_target) fn 
     create: bool,
 ) -> Option<v8::Local<'s, v8::Array>> {
     let registry = simple_object_event_listener_registry(scope, target)?;
-    if let Some(listeners) = event_type.to_v8(scope).and_then(|key| registry.get(scope, key.into())).and_then(|value| v8::Local::<v8::Array>::try_from(value).ok()) {
+    if let Some(listeners) = event_type
+        .to_v8(scope)
+        .and_then(|key| registry.get(scope, key.into()))
+        .and_then(|value| v8::Local::<v8::Array>::try_from(value).ok())
+    {
         return Some(listeners);
     }
     if !create {
@@ -542,11 +532,8 @@ pub(crate) fn simple_event_target_inspector_listener_snapshots<'s>(
         else {
             continue;
         };
-        for listener in
-            simple_object_event_listeners_snapshot(scope, target, &event_type)
-        {
-            let Some(listener) = listener.resolve_callback(scope, target, &event_type)
-            else {
+        for listener in simple_object_event_listeners_snapshot(scope, target, &event_type) {
+            let Some(listener) = listener.resolve_callback(scope, target, &event_type) else {
                 continue;
             };
             let Some(callback) = listener.callback else {
@@ -581,21 +568,25 @@ pub(crate) fn simple_object_event_set_handler<'s>(
     handler_slot_name: &str,
     value: v8::Local<'s, v8::Value>,
 ) {
+    let target = moli_webapi_declare::web_api_object_target(scope, target).unwrap_or(target);
     let callback = v8::Local::<v8::Object>::try_from(value).ok();
-    set_private_value(scope, target, handler_slot_name,
-        callback.map_or_else(|| v8::null(scope).into(), |callback| callback.into()));
+    set_private_value(
+        scope,
+        target,
+        handler_slot_name,
+        callback.map_or_else(|| v8::null(scope).into(), |callback| callback.into()),
+    );
     if let Some(callback) = callback {
         set_simple_object_event_ordered_handler_callback(
             scope,
             target,
-                event_type,
+            event_type,
             handler_slot_name,
             Some(callback),
         );
         return;
     }
-    let Some(listeners) =
-        simple_object_event_listener_array(scope, target, event_type, false)
+    let Some(listeners) = simple_object_event_listener_array(scope, target, event_type, false)
     else {
         return;
     };
@@ -627,10 +618,16 @@ fn handler_belongs_to_target<'s>(
     candidate: v8::Local<'s, v8::Value>,
     target: v8::Local<'s, v8::Object>,
 ) -> bool {
+    let target = moli_webapi_declare::web_api_object_target(scope, target).unwrap_or(target);
     v8::Local::<v8::Object>::try_from(candidate)
         .ok()
         .and_then(|entry| get_private_value(scope, entry, HANDLER_TARGET_SLOT))
-        .is_some_and(|owner| owner.strict_equals(target.into()))
+        .and_then(|owner| v8::Local::<v8::Object>::try_from(owner).ok())
+        .is_some_and(|owner| {
+            moli_webapi_declare::web_api_object_target(scope, owner)
+                .unwrap_or(owner)
+                .strict_equals(target.into())
+        })
 }
 
 /// An uncompiled or failed content handler retains its active listener's
@@ -657,8 +654,7 @@ fn set_simple_object_event_ordered_handler_callback<'s>(
     handler_slot_name: &str,
     callback: Option<v8::Local<'s, v8::Object>>,
 ) {
-    let Some(listeners) =
-        simple_object_event_listener_array(scope, target, event_type, true)
+    let Some(listeners) = simple_object_event_listener_array(scope, target, event_type, true)
     else {
         return;
     };

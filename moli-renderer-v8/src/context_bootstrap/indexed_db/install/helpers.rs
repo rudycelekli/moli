@@ -1,4 +1,6 @@
-use crate::context_bootstrap::{simple_event_target_handler_getter_callback, simple_event_target_handler_setter_callback};
+use crate::context_bootstrap::{
+    simple_event_target_handler_getter_callback, simple_event_target_handler_setter_callback,
+};
 use crate::util::v8str;
 use crate::web_api_interfaces;
 use moli_webapi_declare::WebApiFunctionTemplate;

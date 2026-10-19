@@ -264,8 +264,12 @@ impl<'s> PointerEventInit<'s> {
         PointerEventTailInitDeclaration::new(members.is_primary, pointer_type)
             .initialize(scope, event)
             .expect("PointerEvent tail should initialize");
-        PointerEventSequences { coalesced_events: members.coalesced_events, predicted_events: members.predicted_events }
-            .initialize_snapshot(scope, event).expect("PointerEvent sequence snapshot");
+        PointerEventSequences {
+            coalesced_events: members.coalesced_events,
+            predicted_events: members.predicted_events,
+        }
+        .initialize_snapshot(scope, event)
+        .expect("PointerEvent sequence snapshot");
     }
 }
 

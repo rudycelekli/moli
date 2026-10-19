@@ -75,6 +75,7 @@ pub(crate) fn construct_native_touch_event<'s>(
     let composed = v8::Boolean::new(scope, true);
     define_event_property(scope, state, "composed", composed.into());
     TouchEventInit {
+        ui: UiEventInit::with_event_flags(true, true, true),
         members: TouchEventInitMembers {
             touches,
             target_touches,

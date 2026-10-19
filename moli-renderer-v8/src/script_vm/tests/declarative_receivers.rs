@@ -30,7 +30,8 @@ fn webrtc_declarations_validate_foreign_receivers_before_converting_arguments() 
         getters(realm, 'RTCPeerConnection', pc, ['signalingState', 'iceGatheringState', 'iceConnectionState',
           'connectionState', 'localDescription', 'currentLocalDescription', 'pendingLocalDescription']);
         for (const name of ['getConfiguration', 'setConfiguration', 'createDataChannel', 'createOffer', 'setLocalDescription', 'close']) {
-          check(realm, pc, realm.RTCPeerConnection.prototype[name]);
+          check(realm, pc, realm.RTCPeerConnection.prototype[name],
+            ['createOffer', 'setLocalDescription'].includes(name));
         }
         assert(realm.RTCPeerConnection.prototype.createDataChannel.call(pc, 'borrowed').label === 'borrowed', 'foreign peer method');
         getters(realm, 'RTCDataChannel', channel, ['label', 'ordered', 'maxPacketLifeTime', 'maxRetransmits',
@@ -97,7 +98,10 @@ fn navigator_declarations_preserve_receiver_checks_and_promise_identity_across_r
       }
       return 'ok';
     })().then(result => {globalThis.receiverSetup = result;}, error => {globalThis.receiverSetup = String(error);})"#).unwrap();
-    assert_eq!(vm.eval("receiverSetup").unwrap(), "ok");
+    assert_eq!(
+        vm.eval_after_selected_page_tasks("receiverSetup").unwrap(),
+        "ok"
+    );
     finish_receiver_checks(&mut vm);
 }
 
@@ -116,7 +120,7 @@ fn canvas_declarations_check_setters_before_conversion_and_keep_foreign_backing_
           setter.call(canvas, 4);
           assert(canvas[name] === 4, 'foreign canvas setter updates receiver');
         }
-        for (const name of ['getContext', 'convertToBlob']) check(realm, canvas, realm.OffscreenCanvas.prototype[name]);
+        for (const name of ['getContext', 'convertToBlob']) check(realm, canvas, realm.OffscreenCanvas.prototype[name], name === 'convertToBlob');
         assert(realm.OffscreenCanvas.prototype.getContext.call(canvas, '2d') === canvas.getContext('2d'), 'foreign canvas context identity');
         const bitmap = await other.createImageBitmap(canvas);
         getters(realm, 'ImageBitmap', bitmap, ['width', 'height']);
@@ -126,12 +130,17 @@ fn canvas_declarations_check_setters_before_conversion_and_keep_foreign_backing_
         const data = new other.ImageData(2, 3);
         getters(realm, 'ImageData', data, ['width', 'height', 'colorSpace', 'pixelFormat', 'data']);
         let error;
-        try {realm.createImageBitmap(new Proxy(canvas, {}));} catch (caught) {error = caught;}
+        const invalidSource = realm.createImageBitmap(new Proxy(canvas, {}));
+        assert(Object.getPrototypeOf(invalidSource) === realm.Promise.prototype, 'image source rejection Promise realm');
+        try {await invalidSource;} catch (caught) {error = caught;}
         assert(Object.getPrototypeOf(error) === realm.TypeError.prototype, 'image source parameter keeps native interface check');
       }
       return 'ok';
     })().then(result => {globalThis.receiverSetup = result;}, error => {globalThis.receiverSetup = String(error);})"#).unwrap();
-    assert_eq!(vm.eval("receiverSetup").unwrap(), "ok");
+    assert_eq!(
+        vm.eval_after_selected_page_tasks("receiverSetup").unwrap(),
+        "ok"
+    );
     finish_receiver_checks(&mut vm);
 }
 

@@ -1,16 +1,15 @@
 mod beforeinput_target_validation;
+mod constructor_entry;
 mod credential_container;
 mod credential_json_options;
 mod cross_origin_navigation;
 mod current_pass_css_fonts;
-mod message_port_transfer;
-mod picture_in_picture_interfaces;
-mod visual_viewport_receiver;
-mod writable_stream_native_receivers;
 mod dom_rect_factory_descriptors;
 mod offline_audio_float;
-mod constructor_entry;
+mod picture_in_picture_interfaces;
+mod visual_viewport_receiver;
 mod webtransport_stream_interface_exposure;
+mod writable_stream_native_receivers;
 
 use super::post_parse::dynamic_script_execute_is_runnable_before_dom_content_loaded;
 use super::{
@@ -2230,9 +2229,9 @@ fn decode_png_dimensions_from_data_url(data_url: &str) -> (u32, u32) {
 mod attr_accessors;
 mod attr_node_references;
 mod audio_buffer_interfaces;
-mod audio_node_interfaces;
 mod audio_channel_node_interfaces;
 mod audio_event_interfaces;
+mod audio_node_interfaces;
 mod audio_param_node_interfaces;
 mod audio_source_interfaces;
 mod bitmap_renderer;
@@ -2268,13 +2267,13 @@ mod close_watchers;
 mod convolver_interfaces;
 mod credential_interface_exposure_interfaces;
 mod credential_interfaces;
-mod css_keyframes_mutations;
-mod css_keyframes_receivers;
 mod credential_signals;
 mod cross_origin_symbol_fallback;
 mod cross_origin_window_indexes;
 mod cross_origin_window_names;
 mod css_animation_interfaces;
+mod css_keyframes_mutations;
+mod css_keyframes_receivers;
 mod device_events;
 mod document_shadow_handler_receivers;
 mod document_svg_root;
@@ -2310,6 +2309,9 @@ mod frame_element_security;
 mod video_frame;
 
 mod audio_value_owner_interface_exposure_interfaces;
+mod cross_origin_named_children;
+mod declarative_receivers;
+mod frame_owner_origin_access;
 mod geometry_matrix_dictionary_order;
 mod geometry_point_conversion_order;
 mod headers_list;
@@ -2327,9 +2329,6 @@ mod svg_animation_interfaces;
 mod svg_computed_path_precision;
 mod svg_detached_lengths;
 mod svg_transform_sync_consolidation;
-mod cross_origin_named_children;
-mod declarative_receivers;
-mod frame_owner_origin_access;
 
 mod encrypted_media;
 mod hyperlink_null_url_protocol;
@@ -2385,10 +2384,10 @@ mod remote_playback_interface;
 mod remote_playback_members;
 mod rendering_observers;
 mod rendering_update;
-mod rtc_configuration;
 mod response_blob_mime;
 mod retained_child_window;
 mod rtc_certificate;
+mod rtc_configuration;
 mod rtc_data_channel_close;
 mod rtc_data_channel_init;
 mod rtc_data_channel_send;
@@ -2459,7 +2458,6 @@ mod report_body_interface_exposure;
 
 mod resize_observer_entries;
 
-
 mod file_value_receivers;
 
 mod detached_node_producer_host;
@@ -2471,7 +2469,6 @@ mod file_reader_handlers;
 mod streams_sync_protocol;
 
 mod performance_user_timing;
-
 
 mod window_promise_method_receivers;
 mod window_restricted_accessors;
