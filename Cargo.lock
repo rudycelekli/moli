@@ -950,7 +950,6 @@ dependencies = [
 [[package]]
 name = "curl-sys"
 version = "0.4.91+curl-8.23.0"
-source = "git+https://github.com/lexmount/curl-rust?rev=9d40ca90d8f19ccfd11afe7dd49bc32aab79435c#9d40ca90d8f19ccfd11afe7dd49bc32aab79435c"
 dependencies = [
  "brotlic-sys",
  "cc",
@@ -2866,9 +2865,9 @@ name = "moli-fetch"
 version = "0.1.0"
 dependencies = [
  "anyhow",
- "bytes",
  "base64 0.22.1",
  "brotlic-sys",
+ "bytes",
  "cidr",
  "crossbeam-channel",
  "curl",
