@@ -3157,7 +3157,7 @@ dependencies = [
  "moli-script",
  "moli-stylesheet-blocking",
  "url",
- "xml5ever 0.40.0",
+ "xml5ever 0.40.1",
  "xmlparser",
 ]
 
@@ -6861,7 +6861,8 @@ dependencies = [
 
 [[package]]
 name = "xml5ever"
-version = "0.40.0"
+version = "0.40.1"
+source = "git+https://github.com/lexmount/html5ever?rev=4574311c63e79bba7d4ddb98cb0562d8dad499ee#4574311c63e79bba7d4ddb98cb0562d8dad499ee"
 dependencies = [
  "log",
  "markup5ever 0.40.0",
