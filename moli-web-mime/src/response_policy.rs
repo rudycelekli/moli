@@ -16,8 +16,22 @@ pub fn determine_nosniff(headers: &[(String, Vec<u8>)]) -> bool {
             moli_header_field::decode_header_value(value)
                 .split(',')
                 .next()
-                .is_some_and(|value| value.trim().eq_ignore_ascii_case("nosniff"))
+                .is_some_and(|value| {
+                    value
+                        .trim_matches(['\t', ' '])
+                        .eq_ignore_ascii_case("nosniff")
+                })
         })
+}
+
+/// Resolves a navigation's MIME type when its headers are sufficient.
+///
+/// A supplied type is authoritative. Without one, `nosniff` makes the response
+/// a plain-text document; otherwise the caller still needs to inspect its body.
+/// This navigation default does not apply to image or other subresources.
+pub fn navigation_response_mime_type_from_headers(headers: &[(String, Vec<u8>)]) -> Option<String> {
+    extract_response_mime_essence(headers)
+        .or_else(|| determine_nosniff(headers).then(|| "text/plain".to_owned()))
 }
 
 pub fn should_response_be_blocked_due_to_nosniff(
