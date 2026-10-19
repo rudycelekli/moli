@@ -7,6 +7,7 @@ FileAPI/blob/Blob-stream-byob-crash.html
 FileAPI/blob/Blob-stream-sync-xhr-crash.html
 FileAPI/file/File-constructor-endings.html
 FileAPI/filelist-section/filelist.html
+FileAPI/idlharness.html
 IndexedDB/database-names-by-origin.html
 IndexedDB/idb_webworkers.htm
 IndexedDB/idbfactory-databases-opaque-origin.html
@@ -133,6 +134,8 @@ content-security-policy/form-action/form-action-src-javascript-prevented.html
 content-security-policy/frame-ancestors/frame-ancestors-from-serviceworker.https.html
 content-security-policy/frame-ancestors/frame-ancestors-nested-cross-in-cross-none-block.html
 content-security-policy/frame-ancestors/frame-ancestors-nested-cross-in-cross-self-block.html
+content-security-policy/frame-ancestors/frame-ancestors-nested-cross-in-cross-star-allow.html
+content-security-policy/frame-ancestors/frame-ancestors-nested-cross-in-cross-url-allow.html
 content-security-policy/frame-ancestors/frame-ancestors-nested-cross-in-cross-url-block.html
 content-security-policy/frame-ancestors/frame-ancestors-nested-cross-in-same-none-block.html
 content-security-policy/frame-ancestors/frame-ancestors-nested-cross-in-same-self-block.html
@@ -164,18 +167,20 @@ content-security-policy/generic/generic-0_1-img-src.html
 content-security-policy/generic/generic-0_1-script-src.html
 content-security-policy/generic/generic-0_2.html
 content-security-policy/generic/generic-0_2_3.html
+content-security-policy/generic/invalid-characters-in-policy.html
 content-security-policy/img-src/img-src-none-blocks-data-uri.html
 content-security-policy/img-src/img-src-none-blocks.html
+content-security-policy/img-src/img-src-self-unique-origin.html
 content-security-policy/img-src/img-src-targeting.html
 content-security-policy/img-src/img-src-wildcard-allowed.html
 content-security-policy/inheritance/blob-inherits-from-meta-http-equiv-with-invalid-characters.html
+content-security-policy/inheritance/inherited-csp-list-modifications-are-local.html
 content-security-policy/media-src/media-src-7_1.html
 content-security-policy/media-src/media-src-7_2.html
 content-security-policy/media-src/media-src-blocked-blob-url.html
 content-security-policy/media-src/media-src-blocked-data-url.html
 content-security-policy/meta/meta-img-src.html
 content-security-policy/meta/meta-modified.html
-content-security-policy/meta/sandbox-iframe.html
 content-security-policy/navigation/to-javascript-parent-initiated-check-csp-order.html
 content-security-policy/navigation/to-javascript-parent-initiated-child-csp.html
 content-security-policy/navigation/to-javascript-url-frame-src.html
@@ -474,7 +479,6 @@ css/css-color/parsing/color-computed-rgb.html
 css/css-color/parsing/color-computed.html
 css/css-color/parsing/color-invalid-color-function.html
 css/css-color/parsing/color-invalid-color-layers-function.html
-css/css-color/parsing/color-invalid-color-mix-function.html
 css/css-color/parsing/color-invalid-contrast-color-function.html
 css/css-color/parsing/color-invalid-hex-color.html
 css/css-color/parsing/color-invalid-hsl.html
@@ -485,7 +489,6 @@ css/css-color/parsing/color-invalid-relative-color.html
 css/css-color/parsing/color-invalid-rgb.html
 css/css-color/parsing/color-invalid.html
 css/css-color/parsing/color-mix-out-of-gamut.html
-css/css-color/parsing/color-valid-contrast-color-function.html
 css/css-color/parsing/color-valid-relative-color.html
 css/css-color/parsing/color-valid-system-color.html
 css/css-color/parsing/color-valid.html
@@ -621,7 +624,9 @@ css/css-flexbox/align-content-003.htm
 css/css-flexbox/align-content-004.htm
 css/css-flexbox/align-content-005.htm
 css/css-flexbox/align-content-006.htm
+css/css-flexbox/align-content-007.htm
 css/css-flexbox/align-content-horiz-001a.html
+css/css-flexbox/align-content-horiz-001b.html
 css/css-flexbox/align-content-horiz-002.html
 css/css-flexbox/align-content-rounding.html
 css/css-flexbox/align-content-stretch-rounding.html
@@ -666,6 +671,8 @@ css/css-flexbox/align-self-013.html
 css/css-flexbox/align-self-014.html
 css/css-flexbox/align-self-015.html
 css/css-flexbox/alignment/flex-align-baseline-column-rtl-direction.html
+css/css-flexbox/alignment/flex-align-baseline-column-vert-lr-rtl-wrap-reverse.html
+css/css-flexbox/alignment/flex-align-baseline-column-vert-rl-rtl-wrap-reverse.html
 css/css-flexbox/alignment/flex-content-alignment-with-abspos-001.html
 css/css-flexbox/anonymous-block.html
 css/css-flexbox/anonymous-flex-item-001.html
@@ -678,6 +685,7 @@ css/css-flexbox/anonymous-flex-item-document-white-space-crash.html
 css/css-flexbox/anonymous-flex-item-restyle.html
 css/css-flexbox/aspect-ratio-intrinsic-size-003.html
 css/css-flexbox/aspect-ratio-intrinsic-size-004.html
+css/css-flexbox/aspect-ratio-intrinsic-size-005.html
 css/css-flexbox/aspect-ratio-intrinsic-size-006.html
 css/css-flexbox/aspect-ratio-intrinsic-size-007.html
 css/css-flexbox/aspect-ratio-intrinsic-size-008.html
@@ -715,6 +723,7 @@ css/css-flexbox/dynamic-grid-flex-abspos.html
 css/css-flexbox/dynamic-isize-change-001.html
 css/css-flexbox/dynamic-isize-change-002.html
 css/css-flexbox/dynamic-isize-change-003.html
+css/css-flexbox/dynamic-isize-change-004.html
 css/css-flexbox/dynamic-orthogonal-flex-item.html
 css/css-flexbox/dynamic-stretch-change.html
 css/css-flexbox/empty-flex-box-and-margin-collapsing.html
@@ -778,6 +787,8 @@ css/css-flexbox/flex-basis-008.html
 css/css-flexbox/flex-basis-010.html
 css/css-flexbox/flex-basis-011.html
 css/css-flexbox/flex-basis-012.html
+css/css-flexbox/flex-basis-013.html
+css/css-flexbox/flex-basis-content-percentage-height.html
 css/css-flexbox/flex-basis-item-margins-001.html
 css/css-flexbox/flex-box-wrap.html
 css/css-flexbox/flex-child-percent-basis-resize-1.html
@@ -821,6 +832,8 @@ css/css-flexbox/flex-item-max-width-min-content.html
 css/css-flexbox/flex-item-min-height-min-content.html
 css/css-flexbox/flex-item-min-width-min-content.html
 css/css-flexbox/flex-item-position-relative-001.html
+css/css-flexbox/flex-item-transferred-sizes-padding-border-sizing.html
+css/css-flexbox/flex-item-transferred-sizes-padding-content-sizing.html
 css/css-flexbox/flex-item-vertical-align.html
 css/css-flexbox/flex-item-z-ordering-001.html
 css/css-flexbox/flex-item-z-ordering-002.html
@@ -847,6 +860,7 @@ css/css-flexbox/flex-minimum-height-flex-items-017.html
 css/css-flexbox/flex-minimum-height-flex-items-018.html
 css/css-flexbox/flex-minimum-height-flex-items-019.html
 css/css-flexbox/flex-minimum-height-flex-items-020.html
+css/css-flexbox/flex-minimum-height-flex-items-021.html
 css/css-flexbox/flex-minimum-height-flex-items-022.html
 css/css-flexbox/flex-minimum-height-flex-items-024.html
 css/css-flexbox/flex-minimum-height-flex-items-025.html
@@ -898,10 +912,14 @@ css/css-flexbox/flex-wrap-column-grow.html
 css/css-flexbox/flexbox-align-items-center-nested-001.html
 css/css-flexbox/flexbox-align-self-baseline-compatability.html
 css/css-flexbox/flexbox-align-self-baseline-horiz-002.xhtml
+css/css-flexbox/flexbox-align-self-baseline-horiz-003.xhtml
 css/css-flexbox/flexbox-align-self-baseline-horiz-004.xhtml
 css/css-flexbox/flexbox-align-self-baseline-horiz-005.xhtml
 css/css-flexbox/flexbox-align-self-horiz-001-block.xhtml
 css/css-flexbox/flexbox-align-self-horiz-001-table.xhtml
+css/css-flexbox/flexbox-align-self-horiz-002.xhtml
+css/css-flexbox/flexbox-align-self-horiz-003.xhtml
+css/css-flexbox/flexbox-align-self-horiz-004.xhtml
 css/css-flexbox/flexbox-align-self-horiz-005.xhtml
 css/css-flexbox/flexbox-align-self-stretch-vert-001.html
 css/css-flexbox/flexbox-align-self-stretch-vert-002.html
@@ -916,6 +934,7 @@ css/css-flexbox/flexbox-baseline-multi-item-vert-001b.html
 css/css-flexbox/flexbox-baseline-multi-line-horiz-001.html
 css/css-flexbox/flexbox-baseline-multi-line-horiz-002.html
 css/css-flexbox/flexbox-baseline-multi-line-horiz-003.html
+css/css-flexbox/flexbox-baseline-multi-line-horiz-004.html
 css/css-flexbox/flexbox-baseline-nested-001.html
 css/css-flexbox/flexbox-baseline-single-item-001a.html
 css/css-flexbox/flexbox-baseline-single-item-001b.html
@@ -961,6 +980,7 @@ css/css-flexbox/flexbox-flex-wrap-flexing-002.html
 css/css-flexbox/flexbox-flex-wrap-flexing-003.html
 css/css-flexbox/flexbox-flex-wrap-flexing.html
 css/css-flexbox/flexbox-flex-wrap-horiz-001.html
+css/css-flexbox/flexbox-flex-wrap-horiz-002.html
 css/css-flexbox/flexbox-flex-wrap-nowrap.htm
 css/css-flexbox/flexbox-flex-wrap-vert-001.html
 css/css-flexbox/flexbox-flex-wrap-vert-002.html
@@ -1075,6 +1095,7 @@ css/css-flexbox/flexbox_align-items-flexstart-2.html
 css/css-flexbox/flexbox_align-items-flexstart.html
 css/css-flexbox/flexbox_align-items-stretch-2.html
 css/css-flexbox/flexbox_align-items-stretch-3.html
+css/css-flexbox/flexbox_align-items-stretch-4.html
 css/css-flexbox/flexbox_align-items-stretch.html
 css/css-flexbox/flexbox_align-self-auto.html
 css/css-flexbox/flexbox_align-self-baseline.html
@@ -1395,6 +1416,7 @@ css/css-flexbox/image-as-flexitem-size-004v.html
 css/css-flexbox/image-as-flexitem-size-007.html
 css/css-flexbox/image-as-flexitem-size-007v.html
 css/css-flexbox/image-items-flake-001.html
+css/css-flexbox/image-nested-within-definite-column-flexbox.html
 css/css-flexbox/inheritance.html
 css/css-flexbox/inline-flex-editing-crash.html
 css/css-flexbox/inline-flex-editing-with-updating-text-crash.html
@@ -1404,18 +1426,29 @@ css/css-flexbox/inline-flex.html
 css/css-flexbox/inline-flexbox-absurd-block-size-crash.html
 css/css-flexbox/inline-flexbox-wrap-vertically-width-calculation.html
 css/css-flexbox/intrinsic-size/auto-min-size-001.html
+css/css-flexbox/intrinsic-size/col-wrap-001.html
+css/css-flexbox/intrinsic-size/col-wrap-002.html
+css/css-flexbox/intrinsic-size/col-wrap-003.html
 css/css-flexbox/intrinsic-size/col-wrap-004.html
+css/css-flexbox/intrinsic-size/col-wrap-005.html
+css/css-flexbox/intrinsic-size/col-wrap-006.html
+css/css-flexbox/intrinsic-size/col-wrap-007.html
+css/css-flexbox/intrinsic-size/col-wrap-008.html
 css/css-flexbox/intrinsic-size/col-wrap-009.html
 css/css-flexbox/intrinsic-size/col-wrap-010.html
 css/css-flexbox/intrinsic-size/col-wrap-011.html
 css/css-flexbox/intrinsic-size/col-wrap-012.html
+css/css-flexbox/intrinsic-size/col-wrap-013.html
+css/css-flexbox/intrinsic-size/col-wrap-014.html
 css/css-flexbox/intrinsic-size/col-wrap-015.html
 css/css-flexbox/intrinsic-size/col-wrap-016.html
+css/css-flexbox/intrinsic-size/col-wrap-020.html
 css/css-flexbox/intrinsic-size/col-wrap-crash.html
 css/css-flexbox/intrinsic-size/row-002.html
 css/css-flexbox/intrinsic-size/row-003.html
 css/css-flexbox/intrinsic-size/row-004.html
 css/css-flexbox/intrinsic-size/row-006.html
+css/css-flexbox/intrinsic-size/row-007.html
 css/css-flexbox/intrinsic-size/row-compat-001.html
 css/css-flexbox/item-with-max-height-and-scrollbar.html
 css/css-flexbox/justify-content-001.htm
@@ -1445,6 +1478,8 @@ css/css-flexbox/negative-flex-rounding-crash.html
 css/css-flexbox/negative-item-margins-002-crash.html
 css/css-flexbox/negative-item-margins-crash.html
 css/css-flexbox/negative-margins-001.html
+css/css-flexbox/negative-overflow-002.html
+css/css-flexbox/negative-overflow.html
 css/css-flexbox/nested-orthogonal-flexbox-relayout.html
 css/css-flexbox/order-painting.html
 css/css-flexbox/order/order-abs-children-painting-order-different-container.html
@@ -1461,6 +1496,7 @@ css/css-flexbox/overflow-auto-001.html
 css/css-flexbox/overflow-auto-002.html
 css/css-flexbox/overflow-auto-003.html
 css/css-flexbox/overflow-auto-004.html
+css/css-flexbox/overflow-auto-005.html
 css/css-flexbox/overflow-auto-006.html
 css/css-flexbox/overflow-auto-007.html
 css/css-flexbox/overflow-auto-008.html
@@ -1493,13 +1529,19 @@ css/css-flexbox/parsing/order-valid.html
 css/css-flexbox/parsing/webkit-aliases.html
 css/css-flexbox/percentage-descendant-of-anonymous-flex-item.html
 css/css-flexbox/percentage-heights-000.html
+css/css-flexbox/percentage-heights-001.html
 css/css-flexbox/percentage-heights-002.html
 css/css-flexbox/percentage-heights-005.html
 css/css-flexbox/percentage-heights-006.html
 css/css-flexbox/percentage-heights-007.html
+css/css-flexbox/percentage-heights-008.html
 css/css-flexbox/percentage-heights-009.html
 css/css-flexbox/percentage-heights-010.html
 css/css-flexbox/percentage-heights-012.html
+css/css-flexbox/percentage-heights-015.html
+css/css-flexbox/percentage-heights-016.html
+css/css-flexbox/percentage-heights-017.html
+css/css-flexbox/percentage-heights-018.html
 css/css-flexbox/percentage-heights-019.html
 css/css-flexbox/percentage-heights-021.html
 css/css-flexbox/percentage-margins-001.html
@@ -1522,6 +1564,8 @@ css/css-flexbox/position-absolute-scrollbar-freeze.html
 css/css-flexbox/position-fixed-001.html
 css/css-flexbox/position-relative-percentage-top-002.html
 css/css-flexbox/position-relative-percentage-top-003.html
+css/css-flexbox/position-relative-percentage-top-004.html
+css/css-flexbox/position-relative-stretch-height-001.html
 css/css-flexbox/position-relative-with-scrollable-with-abspos-crash.html
 css/css-flexbox/quirks-auto-block-size-with-percentage-item.html
 css/css-flexbox/radiobutton-min-size.html
@@ -1621,10 +1665,12 @@ css/css-grid/abspos/grid-abspos-staticpos-justify-self-001.html
 css/css-grid/abspos/grid-abspos-staticpos-justify-self-img-001.html
 css/css-grid/abspos/grid-abspos-staticpos-justify-self-img-last-baseline-001.html
 css/css-grid/abspos/grid-abspos-staticpos-justify-self-last-baseline-001.html
+css/css-grid/abspos/grid-abspos-staticpos-justify-self-rtl-001.html
 css/css-grid/abspos/grid-abspos-staticpos-justify-self-rtl-last-baseline-001.html
 css/css-grid/abspos/grid-abspos-staticpos-justify-self-rtl-last-baseline-002.html
 css/css-grid/abspos/grid-paint-positioned-children-001.html
 css/css-grid/abspos/grid-positioned-item-dynamic-change-001.html
+css/css-grid/abspos/grid-positioned-item-dynamic-change-002.html
 css/css-grid/abspos/grid-positioned-item-dynamic-change-004.html
 css/css-grid/abspos/grid-positioned-item-dynamic-change-005.html
 css/css-grid/abspos/grid-positioned-item-dynamic-change-006.html
@@ -1635,6 +1681,7 @@ css/css-grid/abspos/grid-positioned-items-and-autofit-tracks-003.html
 css/css-grid/abspos/grid-positioned-items-and-autofit-tracks-004.html
 css/css-grid/abspos/grid-positioned-items-and-autofit-tracks-005.html
 css/css-grid/abspos/grid-positioned-items-and-autofit-tracks-006.html
+css/css-grid/abspos/grid-positioned-items-and-autofit-tracks-007.html
 css/css-grid/abspos/grid-positioned-items-background-001.html
 css/css-grid/abspos/grid-positioned-items-background-rtl-001.html
 css/css-grid/abspos/grid-positioned-items-content-alignment-001.html
@@ -1699,19 +1746,25 @@ css/css-grid/abspos/positioned-grid-items-016.html
 css/css-grid/abspos/positioned-grid-items-017.html
 css/css-grid/abspos/positioned-grid-items-018.html
 css/css-grid/abspos/positioned-grid-items-019.html
+css/css-grid/abspos/positioned-grid-items-020.html
+css/css-grid/abspos/positioned-grid-items-021.html
 css/css-grid/abspos/positioned-grid-items-022.html
 css/css-grid/abspos/positioned-grid-items-023.html
+css/css-grid/abspos/positioned-grid-items-024.html
 css/css-grid/abspos/positioned-grid-items-025.html
 css/css-grid/abspos/positioned-grid-items-026.html
 css/css-grid/abspos/positioned-grid-items-crash.html
 css/css-grid/abspos/positioned-grid-items-negative-indices-001.html
 css/css-grid/abspos/positioned-grid-items-negative-indices-002.html
+css/css-grid/abspos/positioned-grid-items-negative-indices-003.html
 css/css-grid/abspos/positioned-grid-items-should-not-create-implicit-tracks-001.html
 css/css-grid/abspos/positioned-grid-items-should-not-take-up-space-001.html
 css/css-grid/abspos/positioned-grid-items-sizing-001.html
 css/css-grid/alignment/grid-align-content-distribution.html
 css/css-grid/alignment/grid-align-content.html
+css/css-grid/alignment/grid-align-justify-margin-border-padding.html
 css/css-grid/alignment/grid-align-justify-overflow.html
+css/css-grid/alignment/grid-align-stretching-replaced-items.html
 css/css-grid/alignment/grid-alignment-implies-size-change-003.html
 css/css-grid/alignment/grid-alignment-implies-size-change-004.html
 css/css-grid/alignment/grid-alignment-implies-size-change-015.html
@@ -1719,9 +1772,11 @@ css/css-grid/alignment/grid-alignment-implies-size-change-016.html
 css/css-grid/alignment/grid-alignment-implies-size-change-021.html
 css/css-grid/alignment/grid-alignment-implies-size-change-022.html
 css/css-grid/alignment/grid-alignment-implies-size-change-033.html
+css/css-grid/alignment/grid-alignment-implies-size-change-034.html
 css/css-grid/alignment/grid-baseline-002.html
 css/css-grid/alignment/grid-baseline-003.html
 css/css-grid/alignment/grid-baseline-004.html
+css/css-grid/alignment/grid-baseline-align-cycles-001.html
 css/css-grid/alignment/grid-block-axis-alignment-auto-margins-008.html
 css/css-grid/alignment/grid-column-axis-alignment-sticky-positioned-items-001.html
 css/css-grid/alignment/grid-column-axis-alignment-sticky-positioned-items-002.html
@@ -1730,6 +1785,7 @@ css/css-grid/alignment/grid-content-alignment-and-self-alignment-001.html
 css/css-grid/alignment/grid-content-alignment-and-self-alignment-002.html
 css/css-grid/alignment/grid-content-alignment-auto-sized-tracks-001.html
 css/css-grid/alignment/grid-content-alignment-overflow-001.html
+css/css-grid/alignment/grid-content-alignment-overflow-002.html
 css/css-grid/alignment/grid-content-alignment-second-pass-002.html
 css/css-grid/alignment/grid-content-alignment-with-span-001.html
 css/css-grid/alignment/grid-content-distribution-001.html
@@ -1806,6 +1862,7 @@ css/css-grid/alignment/grid-item-aspect-ratio-justify-self-002.html
 css/css-grid/alignment/grid-item-auto-margins-001.html
 css/css-grid/alignment/grid-item-auto-margins-002.html
 css/css-grid/alignment/grid-item-auto-margins-alignment.html
+css/css-grid/alignment/grid-item-no-aspect-ratio-stretch-1.html
 css/css-grid/alignment/grid-place-content-001.html
 css/css-grid/alignment/grid-row-axis-alignment-sticky-positioned-items-001.html
 css/css-grid/alignment/grid-row-axis-alignment-sticky-positioned-items-002.html
@@ -1881,7 +1938,9 @@ css/css-grid/grid-definition/grid-auto-repeat-dynamic-001.html
 css/css-grid/grid-definition/grid-auto-repeat-dynamic-002.html
 css/css-grid/grid-definition/grid-auto-repeat-dynamic-003.html
 css/css-grid/grid-definition/grid-auto-repeat-intrinsic-001.html
+css/css-grid/grid-definition/grid-auto-repeat-max-size-002.html
 css/css-grid/grid-definition/grid-auto-repeat-min-max-size-001.html
+css/css-grid/grid-definition/grid-auto-repeat-min-size-001.html
 css/css-grid/grid-definition/grid-auto-repeat-min-size-002.html
 css/css-grid/grid-definition/grid-auto-repeat-min-size-003.html
 css/css-grid/grid-definition/grid-auto-repeat-min-size-004.html
@@ -1895,14 +1954,19 @@ css/css-grid/grid-definition/grid-inline-support-grid-template-areas-001.html
 css/css-grid/grid-definition/grid-layout-auto-tracks.html
 css/css-grid/grid-definition/grid-layout-basic.html
 css/css-grid/grid-definition/grid-layout-repeat-notation.html
+css/css-grid/grid-definition/grid-percentage-rows-indefinite-height-001.html
+css/css-grid/grid-definition/grid-percentage-rows-indefinite-height-002.html
 css/css-grid/grid-definition/grid-repeat-max-width-001.html
 css/css-grid/grid-definition/grid-shorthand-001.html
 css/css-grid/grid-definition/grid-support-grid-template-areas-001.html
 css/css-grid/grid-definition/grid-support-named-grid-lines-002.html
 css/css-grid/grid-definition/grid-support-named-grid-lines-003.html
 css/css-grid/grid-definition/grid-support-repeat-002.html
+css/css-grid/grid-definition/grid-template-columns-fit-content-001.html
 css/css-grid/grid-in-table-cell-with-img.html
+css/css-grid/grid-item-non-auto-height-stretch-001.html
 css/css-grid/grid-item-non-auto-height-stretch-002.html
+css/css-grid/grid-item-non-auto-height-stretch-003.html
 css/css-grid/grid-item-non-auto-height-stretch-004.html
 css/css-grid/grid-item-percentage-quirk-002.html
 css/css-grid/grid-items/anonymous-grid-item-001.html
@@ -1913,6 +1977,7 @@ css/css-grid/grid-items/aspect-ratio-003.html
 css/css-grid/grid-items/aspect-ratio-004.html
 css/css-grid/grid-items/aspect-ratio-005.html
 css/css-grid/grid-items/explicitly-sized-grid-item-as-table.html
+css/css-grid/grid-items/grid-automatic-minimum-intrinsic-aspect-ratio-001.html
 css/css-grid/grid-items/grid-img-item-percent-max-height-001.html
 css/css-grid/grid-items/grid-inline-items-001.html
 css/css-grid/grid-items/grid-inline-items-002.html
@@ -1939,10 +2004,16 @@ css/css-grid/grid-items/grid-inline-z-axis-ordering-overlapped-items-003.html
 css/css-grid/grid-items/grid-inline-z-axis-ordering-overlapped-items-004.html
 css/css-grid/grid-items/grid-inline-z-axis-ordering-overlapped-items-005.html
 css/css-grid/grid-items/grid-inline-z-axis-ordering-overlapped-items-006.html
+css/css-grid/grid-items/grid-intrinsic-maximums.html
 css/css-grid/grid-items/grid-item-containing-block-001.html
 css/css-grid/grid-items/grid-item-containing-block-002.html
 css/css-grid/grid-items/grid-item-containing-block-003.html
 css/css-grid/grid-items/grid-item-containing-block-004.html
+css/css-grid/grid-items/grid-item-minmax-img-001.html
+css/css-grid/grid-items/grid-item-overflow-auto-max-height-percentage.html
+css/css-grid/grid-items/grid-item-percentage-sizes-001.html
+css/css-grid/grid-items/grid-item-percentage-sizes-002.html
+css/css-grid/grid-items/grid-item-percentage-sizes-003.html
 css/css-grid/grid-items/grid-item-rel-pos-001.html
 css/css-grid/grid-items/grid-item-rel-pos-002.html
 css/css-grid/grid-items/grid-item-script-001.html
@@ -1951,6 +2022,11 @@ css/css-grid/grid-items/grid-items-002.html
 css/css-grid/grid-items/grid-items-003.html
 css/css-grid/grid-items/grid-items-contribution-negative-margins.html
 css/css-grid/grid-items/grid-items-inline-blocks-001.html
+css/css-grid/grid-items/grid-items-minimum-height-orthogonal-001.html
+css/css-grid/grid-items/grid-items-minimum-width-001.html
+css/css-grid/grid-items/grid-items-minimum-width-002.html
+css/css-grid/grid-items/grid-items-minimum-width-orthogonal-001.html
+css/css-grid/grid-items/grid-items-minimum-width-orthogonal-002.html
 css/css-grid/grid-items/grid-items-percentage-margins-003.html
 css/css-grid/grid-items/grid-items-percentage-margins-004.html
 css/css-grid/grid-items/grid-items-percentage-margins-005.html
@@ -1975,6 +2051,7 @@ css/css-grid/grid-items/grid-items-percentage-paddings-011.html
 css/css-grid/grid-items/grid-items-percentage-paddings-012.html
 css/css-grid/grid-items/grid-items-percentage-paddings-013.html
 css/css-grid/grid-items/grid-items-percentage-paddings-014.html
+css/css-grid/grid-items/grid-items-sizing-alignment-001.html
 css/css-grid/grid-items/grid-layout-grid-in-grid.html
 css/css-grid/grid-items/grid-layout-z-order-a.html
 css/css-grid/grid-items/grid-layout-z-order-b.html
@@ -2030,11 +2107,13 @@ css/css-grid/grid-items/replaced-element-001.html
 css/css-grid/grid-items/replaced-element-002.html
 css/css-grid/grid-items/replaced-element-007.html
 css/css-grid/grid-items/replaced-element-010.html
+css/css-grid/grid-items/replaced-element-014.html
 css/css-grid/grid-items/replaced-element-015.html
 css/css-grid/grid-items/whitespace-in-grid-item-001.html
 css/css-grid/grid-lanes/abspos/column-grid-lanes-intrinsic-sizing-oof.html
 css/css-grid/grid-lanes/abspos/column-grid-lanes-out-of-flow-004.html
 css/css-grid/grid-lanes/abspos/row-grid-lanes-intrinsic-sizing-oof.html
+css/css-grid/grid-lanes/alignment/column-overflow-alignment-001.html
 css/css-grid/grid-lanes/alignment/grid-lanes-content-distribution-001.html
 css/css-grid/grid-lanes/column-empty-grid-lanes-container-001.html
 css/css-grid/grid-lanes/column-empty-grid-lanes-container-002.html
@@ -2131,6 +2210,7 @@ css/css-grid/grid-model/grid-first-line-002.html
 css/css-grid/grid-model/grid-float-001.html
 css/css-grid/grid-model/grid-float-002.html
 css/css-grid/grid-model/grid-floats-no-intrude-001.html
+css/css-grid/grid-model/grid-floats-no-intrude-002.html
 css/css-grid/grid-model/grid-gutters-and-flex-content-001.html
 css/css-grid/grid-model/grid-gutters-as-percentage-001.html
 css/css-grid/grid-model/grid-inline-first-letter-001.html
@@ -2183,6 +2263,7 @@ css/css-grid/layout-algorithm/grid-as-flex-item-should-not-shrink-to-fit-005.htm
 css/css-grid/layout-algorithm/grid-as-flex-item-should-not-shrink-to-fit-006.html
 css/css-grid/layout-algorithm/grid-as-flex-item-should-not-shrink-to-fit-007.html
 css/css-grid/layout-algorithm/grid-as-flex-item-should-not-shrink-to-fit-008.html
+css/css-grid/layout-algorithm/grid-container-percentage-001.html
 css/css-grid/layout-algorithm/grid-container-percentage-002.html
 css/css-grid/layout-algorithm/grid-content-distribution-must-account-for-track-sizing-001.html
 css/css-grid/layout-algorithm/grid-content-distribution-must-account-for-track-sizing-003.html
@@ -2193,6 +2274,10 @@ css/css-grid/layout-algorithm/grid-find-fr-size-restart-algorithm.html
 css/css-grid/layout-algorithm/grid-intrinsic-track-sizes-min-size-001.html
 css/css-grid/layout-algorithm/grid-item-margin-auto-columns-rows-001.html
 css/css-grid/layout-algorithm/grid-layout-free-space-unit.html
+css/css-grid/layout-algorithm/grid-percent-cols-filled-shrinkwrap-001.html
+css/css-grid/layout-algorithm/grid-percent-cols-spanned-shrinkwrap-001.html
+css/css-grid/layout-algorithm/grid-percent-rows-filled-shrinkwrap-001.html
+css/css-grid/layout-algorithm/grid-percent-rows-spanned-shrinkwrap-001.html
 css/css-grid/layout-algorithm/grid-stretch-respects-min-size-001.html
 css/css-grid/layout-algorithm/grid-track-ignores-max-size-001.html
 css/css-grid/min-size-auto-overflow-clip.html
@@ -2282,6 +2367,7 @@ css/css-grid/subgrid/standalone-axis-size-002.html
 css/css-grid/subgrid/standalone-axis-size-003.html
 css/css-grid/subgrid/standalone-axis-size-004.html
 css/css-grid/subgrid/standalone-axis-size-005.html
+css/css-grid/subgrid/standalone-axis-size-006.html
 css/css-grid/subgrid/standalone-axis-size-008.html
 css/css-grid/subgrid/standalone-axis-size-009.html
 css/css-grid/subgrid/sticky-subgrid-item.html
@@ -2470,11 +2556,13 @@ css/css-sizing/abspos-auto-sizing-fit-content-percentage-005.html
 css/css-sizing/abspos-auto-sizing-fit-content-percentage-006.html
 css/css-sizing/abspos-auto-sizing-fit-content-percentage-007.html
 css/css-sizing/abspos-auto-sizing-fit-content-percentage-008.html
+css/css-sizing/abspos-intrinsic-height-inset-percentage-child.html
 css/css-sizing/aspect-ratio-percentage-height.html
 css/css-sizing/aspect-ratio/abspos-001.html
 css/css-sizing/aspect-ratio/abspos-002.html
 css/css-sizing/aspect-ratio/abspos-003.html
 css/css-sizing/aspect-ratio/abspos-004.html
+css/css-sizing/aspect-ratio/abspos-005.html
 css/css-sizing/aspect-ratio/abspos-006.html
 css/css-sizing/aspect-ratio/abspos-007.html
 css/css-sizing/aspect-ratio/abspos-008.html
@@ -2509,11 +2597,14 @@ css/css-sizing/aspect-ratio/block-aspect-ratio-018.html
 css/css-sizing/aspect-ratio/block-aspect-ratio-020.html
 css/css-sizing/aspect-ratio/block-aspect-ratio-022.html
 css/css-sizing/aspect-ratio/block-aspect-ratio-023.html
+css/css-sizing/aspect-ratio/block-aspect-ratio-024.html
 css/css-sizing/aspect-ratio/block-aspect-ratio-025.html
 css/css-sizing/aspect-ratio/block-aspect-ratio-026.html
 css/css-sizing/aspect-ratio/block-aspect-ratio-027.html
+css/css-sizing/aspect-ratio/block-aspect-ratio-028.html
 css/css-sizing/aspect-ratio/block-aspect-ratio-029-crash.html
 css/css-sizing/aspect-ratio/block-aspect-ratio-030.html
+css/css-sizing/aspect-ratio/block-aspect-ratio-031.html
 css/css-sizing/aspect-ratio/block-aspect-ratio-033.html
 css/css-sizing/aspect-ratio/block-aspect-ratio-034.html
 css/css-sizing/aspect-ratio/block-aspect-ratio-035.html
@@ -2596,7 +2687,9 @@ css/css-sizing/aspect-ratio/grid-aspect-ratio-017.html
 css/css-sizing/aspect-ratio/grid-aspect-ratio-019.html
 css/css-sizing/aspect-ratio/grid-aspect-ratio-020.html
 css/css-sizing/aspect-ratio/grid-aspect-ratio-021.html
+css/css-sizing/aspect-ratio/grid-aspect-ratio-022.html
 css/css-sizing/aspect-ratio/grid-aspect-ratio-023.html
+css/css-sizing/aspect-ratio/grid-aspect-ratio-024.html
 css/css-sizing/aspect-ratio/grid-aspect-ratio-025.html
 css/css-sizing/aspect-ratio/grid-aspect-ratio-026.html
 css/css-sizing/aspect-ratio/grid-aspect-ratio-030.html
@@ -2613,11 +2706,15 @@ css/css-sizing/aspect-ratio/intrinsic-size-002.html
 css/css-sizing/aspect-ratio/intrinsic-size-003.html
 css/css-sizing/aspect-ratio/intrinsic-size-004.html
 css/css-sizing/aspect-ratio/intrinsic-size-005.html
+css/css-sizing/aspect-ratio/intrinsic-size-006.html
 css/css-sizing/aspect-ratio/intrinsic-size-007.html
+css/css-sizing/aspect-ratio/intrinsic-size-008.html
 css/css-sizing/aspect-ratio/intrinsic-size-009.html
 css/css-sizing/aspect-ratio/intrinsic-size-011.html
 css/css-sizing/aspect-ratio/intrinsic-size-012.html
 css/css-sizing/aspect-ratio/intrinsic-size-013.html
+css/css-sizing/aspect-ratio/intrinsic-size-014.html
+css/css-sizing/aspect-ratio/intrinsic-size-015.html
 css/css-sizing/aspect-ratio/intrinsic-size-016.html
 css/css-sizing/aspect-ratio/intrinsic-size-017.html
 css/css-sizing/aspect-ratio/intrinsic-size-018.html
@@ -2716,6 +2813,8 @@ css/css-sizing/dynamic-change-inline-size-001.html
 css/css-sizing/dynamic-change-inline-size-002.html
 css/css-sizing/dynamic-change-inline-size-003.html
 css/css-sizing/dynamic-change-inline-size-004.html
+css/css-sizing/fit-content-block-size-abspos.html
+css/css-sizing/fit-content-block-size-fixedpos.html
 css/css-sizing/fit-content-contribution-001.html
 css/css-sizing/fit-content-min-inline-size.html
 css/css-sizing/float-clearance-with-margin-collapse-and-fit-content-and-padding-percentage-001.html
@@ -2723,6 +2822,7 @@ css/css-sizing/float-clearance-with-margin-collapse-and-fit-content-and-padding-
 css/css-sizing/float-clearance-with-margin-collapse-and-fit-content-and-padding-percentage-003.html
 css/css-sizing/float-clearance-with-margin-collapse-and-fit-content-and-padding-percentage-004.html
 css/css-sizing/frameset-intrinsic-crash.html
+css/css-sizing/grid-item-image-percentage-min-height-computes-as-0.html
 css/css-sizing/hori-block-size-small-or-larger-than-container-with-min-or-max-content-2a.html
 css/css-sizing/hori-block-size-small-or-larger-than-container-with-min-or-max-content-2b.html
 css/css-sizing/image-fractional-height-with-wide-aspect-ratio.html
@@ -2744,6 +2844,7 @@ css/css-sizing/intrinsic-height-abspos-percentage-child-002.html
 css/css-sizing/intrinsic-height-abspos-percentage-child-003.html
 css/css-sizing/intrinsic-height-abspos-percentage-child-004.html
 css/css-sizing/intrinsic-height-abspos-percentage-child.html
+css/css-sizing/intrinsic-height-abspos-stretch-percentage-child.html
 css/css-sizing/intrinsic-height-fixedpos-percentage-child.html
 css/css-sizing/intrinsic-percent-non-replaced-001.html
 css/css-sizing/intrinsic-percent-non-replaced-002.html
@@ -2754,8 +2855,11 @@ css/css-sizing/intrinsic-percent-replaced-009.html
 css/css-sizing/intrinsic-percent-replaced-010.html
 css/css-sizing/intrinsic-percent-replaced-017.html
 css/css-sizing/intrinsic-percent-replaced-021.html
+css/css-sizing/intrinsic-percent-replaced-022.html
+css/css-sizing/intrinsic-percent-replaced-023.html
 css/css-sizing/intrinsic-percent-replaced-024.html
 css/css-sizing/intrinsic-percent-replaced-026.html
+css/css-sizing/intrinsic-size-min-content-box-sizing.html
 css/css-sizing/margin-collapse-with-indefinite-block-size-001.html
 css/css-sizing/margin-collapse-with-indefinite-block-size-002.html
 css/css-sizing/margin-collapse-with-indefinite-block-size-003.html
@@ -2795,11 +2899,25 @@ css/css-sizing/responsive-iframe/responsive-iframe-not-embedded-sized.html
 css/css-sizing/responsive-iframe/responsive-iframe-value.html?value=,300,150
 css/css-sizing/shrink-to-fit-sizing-max-width-min-content.html
 css/css-sizing/stretch/abspos-1.html
+css/css-sizing/stretch/abspos-2.html
 css/css-sizing/stretch/auto-margins-1.html
 css/css-sizing/stretch/auto-margins-2.html
+css/css-sizing/stretch/bfc-next-to-float-1.html
+css/css-sizing/stretch/block-height-003.html
+css/css-sizing/stretch/block-height-004.html
+css/css-sizing/stretch/block-height-005.html
+css/css-sizing/stretch/block-height-006.html
+css/css-sizing/stretch/block-height-007.html
+css/css-sizing/stretch/cache-miss-001.html
+css/css-sizing/stretch/cache-miss-002.html
 css/css-sizing/stretch/content-contribution-001.html
 css/css-sizing/stretch/fixed-table-1.html
+css/css-sizing/stretch/flex-basis-1.html
 css/css-sizing/stretch/flex-line-001.html
+css/css-sizing/stretch/flex-line-002.html
+css/css-sizing/stretch/flex-line-003.html
+css/css-sizing/stretch/flex-line-004.html
+css/css-sizing/stretch/flex-line-005.html
 css/css-sizing/stretch/flexbox-stretch-minimum-001.html
 css/css-sizing/stretch/flexbox-stretch-minimum-002.html
 css/css-sizing/stretch/grid-item-height-001.html
@@ -2808,9 +2926,14 @@ css/css-sizing/stretch/indefinite-2.html
 css/css-sizing/stretch/indefinite-3.html
 css/css-sizing/stretch/min-width-1.html
 css/css-sizing/stretch/parsing.html
+css/css-sizing/stretch/stretch-block-size-002.html
+css/css-sizing/stretch/stretch-block-size-003.html
 css/css-sizing/stretch/stretch-float-with-sibling.html
 css/css-sizing/stretch/stretch-float.html
+css/css-sizing/stretch/stretch-inline-size-002.html
+css/css-sizing/stretch/stretch-inline-size-003.html
 css/css-sizing/svg-intrinsic-size-002.html
+css/css-sizing/svg-intrinsic-size-003.html
 css/css-sizing/svg-intrinsic-size-004.html
 css/css-sizing/svg-intrinsic-size-005.html
 css/css-sizing/svg-intrinsic-size-006.html
@@ -3174,6 +3297,7 @@ css/cssom-view/offsetTopLeft-empty-inline.html
 css/cssom-view/offsetTopLeft-inline.html
 css/cssom-view/offsetTopLeft-leading-space-inline.html
 css/cssom-view/offsetTopLeft-table-caption.html
+css/cssom-view/outer-svg.html
 css/cssom-view/parsing/scroll-behavior-computed.html
 css/cssom-view/parsing/scroll-behavior-invalid.html
 css/cssom-view/parsing/scroll-behavior-valid.html
@@ -3181,7 +3305,6 @@ css/cssom-view/pt-to-px-width.html
 css/cssom-view/range-bounding-client-rect-with-display-contents.html
 css/cssom-view/resize-event-on-initial-layout-001.html
 css/cssom-view/resize-event-on-initial-layout-002.html
-css/cssom-view/screen-detached-frame.html
 css/cssom-view/screenLeftTop.html
 css/cssom-view/scroll-back-to-initial-position.html
 css/cssom-view/scroll-behavior-smooth-positions.html
@@ -3196,8 +3319,11 @@ css/cssom-view/scrollIntoView-root-overflow-clip.html
 css/cssom-view/scrollIntoView-scrolling-box-with-large-border.html
 css/cssom-view/scrollIntoView-shadow.html
 css/cssom-view/scrollIntoView-should-treat-slot-as-scroll-container.html
+css/cssom-view/scrollLeftTop.html
 css/cssom-view/scrollTop-display-change.html
 css/cssom-view/scrollWidthHeight-contain-layout.html
+css/cssom-view/scrollWidthHeight-negative-margin-001.html
+css/cssom-view/scrollWidthHeight-overflow-visible-negative-margins.html
 css/cssom-view/scrolling-no-browsing-context.html
 css/cssom-view/scrollingElement-quirks-dynamic-001.html
 css/cssom-view/scrollingElement-quirks-dynamic-002.html
@@ -3307,6 +3433,7 @@ css/cssom/getComputedStyle-detached-subtree.html
 css/cssom/getComputedStyle-display-none-001.html
 css/cssom/getComputedStyle-display-none-002.html
 css/cssom/getComputedStyle-display-none-003.html
+css/cssom/getComputedStyle-dynamic-subdoc.html
 css/cssom/getComputedStyle-insets-absolute-crash.html
 css/cssom/getComputedStyle-insets-absolute-logical-crash.html
 css/cssom/getComputedStyle-insets-absolute-roundtrip.html
@@ -3981,7 +4108,6 @@ dom/nodes/Node-replaceChild.html
 dom/nodes/Node-textContent.html
 dom/nodes/NodeList-Iterable.html
 dom/nodes/NodeList-static-length-getter-tampered-1.html
-dom/nodes/NodeList-static-length-getter-tampered-2.html
 dom/nodes/NodeList-static-length-getter-tampered-3.html
 dom/nodes/NodeList-static-length-getter-tampered-indexOf-1.html
 dom/nodes/NodeList-static-length-getter-tampered-indexOf-2.html
@@ -5647,9 +5773,11 @@ html/browsers/browsing-the-web/history-traversal/event-order/same-document-trave
 html/browsers/browsing-the-web/history-traversal/events.html
 html/browsers/browsing-the-web/history-traversal/hash-empty-string.html
 html/browsers/browsing-the-web/history-traversal/hashchange-same-fragment-does-not-fire.html
+html/browsers/browsing-the-web/history-traversal/hashchange_event.html
 html/browsers/browsing-the-web/history-traversal/history-traversal-navigate-parent-while-child-loading.html
 html/browsers/browsing-the-web/history-traversal/history-traversal-navigates-multiple-frames.html
 html/browsers/browsing-the-web/history-traversal/persisted-user-state-restoration/scroll-restoration-basic.html
+html/browsers/browsing-the-web/history-traversal/popstate_event.html
 html/browsers/browsing-the-web/history-traversal/same-url.html
 html/browsers/browsing-the-web/history-traversal/window-name-after-same-origin-main-frame-navigation.html
 html/browsers/browsing-the-web/navigating-across-documents/003.html
@@ -5830,6 +5958,8 @@ html/browsers/history/the-location-interface/replace-with-nested-iframe.html
 html/browsers/history/the-location-interface/scripted_click_location_assign_during_load.html
 html/browsers/history/the-location-interface/security_location_0.htm
 html/browsers/origin/cross-origin-objects/cross-origin-objects-function-caching.html
+html/browsers/origin/cross-origin-objects/cross-origin-objects-function-length.html
+html/browsers/origin/cross-origin-objects/cross-origin-objects-function-name.html
 html/browsers/origin/inheritance/about-blank-iframe.html
 html/browsers/origin/inheritance/about-blank-window.html
 html/browsers/origin/inheritance/about-srcdoc.html
@@ -5870,6 +6000,10 @@ html/browsers/the-window-object/named-access-on-the-window-object/window-null-na
 html/browsers/the-window-object/navigate-to-about-blank-while-initial-load-pending.html
 html/browsers/the-window-object/open-close/closed-after-close.html
 html/browsers/the-window-object/open-close/creating_browsing_context_test_01.html
+html/browsers/the-window-object/open-close/open-features-is-popup-condition.html?combination
+html/browsers/the-window-object/open-close/open-features-is-popup-condition.html?position
+html/browsers/the-window-object/open-close/open-features-is-popup-condition.html?single-1
+html/browsers/the-window-object/open-close/open-features-is-popup-condition.html?single-2
 html/browsers/the-window-object/open-close/open-features-negative-innerwidth-innerheight.html
 html/browsers/the-window-object/open-close/open-features-negative-screenx-screeny.html
 html/browsers/the-window-object/open-close/open-features-negative-top-left.html
@@ -5883,6 +6017,7 @@ html/browsers/the-window-object/window-open-noopener.html?_parent
 html/browsers/the-window-object/window-open-noopener.html?_self
 html/browsers/the-window-object/window-open-noopener.html?_top
 html/browsers/the-window-object/window-open-noreferrer.html
+html/browsers/the-window-object/window-open-windowfeatures-values.html
 html/browsers/the-window-object/window-prototype-chain.html
 html/browsers/the-windowproxy-exotic-object/windowproxy-define-own-property-unforgeable-same-origin.html
 html/browsers/the-windowproxy-exotic-object/windowproxy-prevent-extensions.html
@@ -6130,7 +6265,6 @@ html/semantics/document-metadata/the-meta-element/color-scheme/meta-color-scheme
 html/semantics/document-metadata/the-meta-element/color-scheme/meta-color-scheme-single-value-in-shadow-tree.html
 html/semantics/document-metadata/the-meta-element/http-equiv-and-name-1.html
 html/semantics/document-metadata/the-meta-element/http-equiv-and-name-2.html
-html/semantics/document-metadata/the-meta-element/pragma-directives/attr-meta-http-equiv-refresh/allow-scripts-flag-changing-1.html
 html/semantics/document-metadata/the-meta-element/pragma-directives/attr-meta-http-equiv-refresh/allow-scripts-flag-changing-2.html
 html/semantics/document-metadata/the-meta-element/pragma-directives/attr-meta-http-equiv-refresh/dynamic-append.html
 html/semantics/document-metadata/the-meta-element/pragma-directives/attr-meta-http-equiv-refresh/not-in-shadow-tree.html
@@ -6211,7 +6345,9 @@ html/semantics/embedded-content/the-iframe-element/iframe_javascript_url_remove_
 html/semantics/embedded-content/the-iframe-element/iframe_navigate_javascript_url.htm
 html/semantics/embedded-content/the-iframe-element/iframe_remove_src.html
 html/semantics/embedded-content/the-iframe-element/iframe_sandbox_allow_script.html
+html/semantics/embedded-content/the-iframe-element/iframe_sandbox_allow_top_navigation-1.html
 html/semantics/embedded-content/the-iframe-element/iframe_sandbox_allow_top_navigation-2.html
+html/semantics/embedded-content/the-iframe-element/iframe_sandbox_allow_top_navigation-3.html
 html/semantics/embedded-content/the-iframe-element/iframe_sandbox_block_modals-1.html
 html/semantics/embedded-content/the-iframe-element/iframe_sandbox_block_modals-2.html
 html/semantics/embedded-content/the-iframe-element/iframe_sandbox_block_modals-3.html
@@ -6225,6 +6361,7 @@ html/semantics/embedded-content/the-iframe-element/iframe_sandbox_navigate_itsel
 html/semantics/embedded-content/the-iframe-element/iframe_sandbox_popups_escaping-1.html
 html/semantics/embedded-content/the-iframe-element/iframe_sandbox_popups_escaping-2.html
 html/semantics/embedded-content/the-iframe-element/iframe_sandbox_popups_escaping-3.html
+html/semantics/embedded-content/the-iframe-element/move-node-local-root.html
 html/semantics/embedded-content/the-iframe-element/multiple-iframes-with-allow-scripts-crash.html
 html/semantics/embedded-content/the-iframe-element/same-origin-contextual-fragment.html
 html/semantics/embedded-content/the-iframe-element/same_origin_parentage.html
@@ -6356,7 +6493,6 @@ html/semantics/forms/form-submission-0/form-data-set-usv.html
 html/semantics/forms/form-submission-0/form-double-submit-2.html
 html/semantics/forms/form-submission-0/form-double-submit-3.html
 html/semantics/forms/form-submission-0/form-double-submit-default-action.html
-html/semantics/forms/form-submission-0/form-double-submit-input-type-change.html
 html/semantics/forms/form-submission-0/form-double-submit-multiple-targets.html
 html/semantics/forms/form-submission-0/form-double-submit-preventdefault-click.html
 html/semantics/forms/form-submission-0/form-double-submit-to-different-origin-frame.html
@@ -6805,6 +6941,7 @@ html/semantics/scripting-1/the-script-element/execution-timing/079.html
 html/semantics/scripting-1/the-script-element/execution-timing/081.html
 html/semantics/scripting-1/the-script-element/execution-timing/082.html
 html/semantics/scripting-1/the-script-element/execution-timing/084.html
+html/semantics/scripting-1/the-script-element/execution-timing/085.html
 html/semantics/scripting-1/the-script-element/execution-timing/086.html
 html/semantics/scripting-1/the-script-element/execution-timing/087.html
 html/semantics/scripting-1/the-script-element/execution-timing/088.html
@@ -7422,6 +7559,7 @@ html/webappapis/dynamic-markup-insertion/document-writeln/document.writeln-03.ht
 html/webappapis/dynamic-markup-insertion/html-unsafe-methods/Document-parseHTMLUnsafe-encoding.html
 html/webappapis/dynamic-markup-insertion/html-unsafe-methods/Document-parseHTMLUnsafe-style-attribute.html
 html/webappapis/dynamic-markup-insertion/html-unsafe-methods/Document-parseHTMLUnsafe-url-base-pushstate.html
+html/webappapis/dynamic-markup-insertion/html-unsafe-methods/Document-parseHTMLUnsafe-url-base.html
 html/webappapis/dynamic-markup-insertion/html-unsafe-methods/Document-parseHTMLUnsafe-url-moretests.html
 html/webappapis/dynamic-markup-insertion/html-unsafe-methods/Document-parseHTMLUnsafe-url-pushstate.html
 html/webappapis/dynamic-markup-insertion/html-unsafe-methods/Document-parseHTMLUnsafe-url.html
@@ -7524,7 +7662,6 @@ html/webappapis/the-windoworworkerglobalscope-mixin/Worker_Self_Origin.html
 html/webappapis/timers/setinterval-cross-realm-callback-report-exception.html
 html/webappapis/timers/setinterval-settimeout-clamping.html
 html/webappapis/timers/settimeout-cross-realm-callback-report-exception.html
-html/webappapis/timers/timer-nesting-not-inherited-in-microtask.html
 html/webappapis/user-prompts/print-during-beforeunload.html
 html/webappapis/user-prompts/print-during-unload.html
 html/webappapis/user-prompts/print-in-detached-frame.html
@@ -7539,7 +7676,6 @@ import-maps/csp/hash.html
 import-maps/csp/nonce-failure.html
 import-maps/csp/nonce.html
 import-maps/csp/unsafe-inline.html
-import-maps/dynamic-integrity.html
 import-maps/dynamic-module-map-key.html
 import-maps/external-import-map-errors.html
 import-maps/module-map-key.html
@@ -8039,11 +8175,14 @@ page-visibility/test_read_only.html
 payment-request/PaymentRequestUpdateEvent/constructor.http.html
 payment-request/payment-request-insecure.http.html
 performance-timeline/buffered-does-not-sync-invoke.html
+performance-timeline/get-invalid-entries.html
+performance-timeline/navigation-id-worker-created-entries.html
 performance-timeline/not-clonable.html
 performance-timeline/po-observe.html
 performance-timeline/po-resource.html
 performance-timeline/supportedEntryTypes-cross-realm-access.html
 performance-timeline/timing-removed-iframe.html
+performance-timeline/worker-with-performance-observer.html
 permissions-policy/historical-feature-policy-header.html
 permissions/all-permissions.html
 permissions/midi-permission.html
@@ -8147,6 +8286,7 @@ resource-timing/link-sequence-of-events.html
 resource-timing/queue-entry-regardless-buffer-size.html
 resource-timing/resource-ignore-data-url.html
 resource-timing/resource-timing-failed-fetch.html
+resource-timing/resource_dedicated_worker.html
 resource-timing/resource_subframe_self_navigation.html
 resource-timing/script-rt-entries.html
 resource-timing/shared-worker-rt-entry.html
@@ -8261,7 +8401,6 @@ service-workers/service-worker/activate-event-after-install-state-change.https.h
 service-workers/service-worker/activation-after-registration.https.html
 service-workers/service-worker/claim-fetch.https.html
 service-workers/service-worker/claim-not-using-registration.https.html
-service-workers/service-worker/claim-shared-worker-fetch.https.html
 service-workers/service-worker/client-id.https.html
 service-workers/service-worker/client-url-of-blob-url-worker.https.html
 service-workers/service-worker/controller-on-disconnect.https.html
@@ -8492,6 +8631,8 @@ shadow-dom/untriaged/user-interaction/active-element/test-002.html
 shadow-dom/untriaged/user-interaction/editing/inheritance-of-content-editable-001.html
 shadow-dom/untriaged/user-interaction/ranges-and-selections/test-001.html
 shadow-dom/user-agent-shadow-root-crash.html
+streams/idlharness.any.js?moli-wpt-any=dedicatedworker
+streams/idlharness.any.js?moli-wpt-any=window
 streams/piping/abort.any.js?moli-wpt-any=dedicatedworker
 streams/piping/abort.any.js?moli-wpt-any=window
 streams/piping/close-propagation-backward.any.js?moli-wpt-any=dedicatedworker
@@ -8565,6 +8706,8 @@ streams/readable-streams/default-reader.any.js?moli-wpt-any=dedicatedworker
 streams/readable-streams/default-reader.any.js?moli-wpt-any=window
 streams/readable-streams/floating-point-total-queue-size.any.js?moli-wpt-any=dedicatedworker
 streams/readable-streams/floating-point-total-queue-size.any.js?moli-wpt-any=window
+streams/readable-streams/from.any.js?moli-wpt-any=dedicatedworker
+streams/readable-streams/from.any.js?moli-wpt-any=window
 streams/readable-streams/garbage-collection.any.js?moli-wpt-any=dedicatedworker
 streams/readable-streams/garbage-collection.any.js?moli-wpt-any=window
 streams/readable-streams/general.any.js?moli-wpt-any=dedicatedworker
@@ -8873,6 +9016,8 @@ trusted-types/should-sink-type-mismatch-violation-be-blocked-by-csp-003.html
 trusted-types/trusted-types-duplicate-names-list-report-only.html
 trusted-types/trusted-types-eval-reporting-no-unsafe-eval.html
 trusted-types/trusted-types-eval-reporting-report-only.html
+trusted-types/trusted-types-navigation.html?01-05
+trusted-types/trusted-types-navigation.html?16-20
 trusted-types/trusted-types-reporting-for-DOMParser-parseFromString.html
 trusted-types/trusted-types-reporting-for-DedicatedWorker-DedicatedWorker-constructor.html
 trusted-types/trusted-types-reporting-for-DedicatedWorker-eval.html
@@ -9607,9 +9752,12 @@ xhr/responseText-status.html
 xhr/responseType-document-in-worker.html
 xhr/responseXML-unavailable-in-worker.html
 xhr/responseurl.html
+xhr/responsexml-basic.htm
 xhr/responsexml-get-twice.htm
 xhr/responsexml-invalid-type.html
+xhr/responsexml-media-type.htm
 xhr/responsexml-non-document-types.htm
+xhr/responsexml-non-well-formed.htm
 xhr/send-accept-language.htm
 xhr/send-after-setting-document-domain.htm
 xhr/send-blob-with-no-mime-type.html
@@ -9688,7 +9836,6 @@ xhr/xmlhttprequest-timeout-worker-aborted.html?only open()ed, not aborted
 xhr/xmlhttprequest-timeout-worker-overrides.html?timeout disabled after initially set
 xhr/xmlhttprequest-timeout-worker-overrides.html?timeout enabled after initially disabled
 xhr/xmlhttprequest-timeout-worker-overrides.html?timeout overrides load after a delay
-xhr/xmlhttprequest-timeout-worker-overridesexpires.html?timeout set to expired value before load fires
 xhr/xmlhttprequest-timeout-worker-overridesexpires.html?timeout set to expiring value after load fires
 xhr/xmlhttprequest-timeout-worker-overridesexpires.html?timeout set to non-expiring value after timeout fires
 xhr/xmlhttprequest-timeout-worker-simple.html?load fires normally
