@@ -76,6 +76,12 @@ enum MediaEncodingType {
     Webrtc,
 }
 
+#[derive(Clone, Copy)]
+enum MediaConfigurationType {
+    Decoding(MediaDecodingType),
+    Encoding(MediaEncodingType),
+}
+
 #[derive(Clone, Copy, Debug, webidl::WebIdlEnum)]
 #[webidl(name = "HdrMetadataType")]
 enum HdrMetadataType {
@@ -405,10 +411,8 @@ fn validate_decoding_configuration(
     configuration: &MediaDecodingConfiguration,
 ) -> std::result::Result<(), &'static str> {
     validate_media_configuration(
-        configuration.media.audio.as_ref(),
-        configuration.media.video.as_ref(),
-        configuration.decoding_type == MediaDecodingType::Webrtc,
-        true,
+        &configuration.media,
+        MediaConfigurationType::Decoding(configuration.decoding_type),
     )?;
     if let Some(key_system) = configuration.key_system_configuration.as_ref() {
         if configuration.decoding_type == MediaDecodingType::Webrtc {
@@ -435,39 +439,57 @@ fn validate_encoding_configuration(
     configuration: &MediaEncodingConfiguration,
 ) -> std::result::Result<(), &'static str> {
     validate_media_configuration(
-        configuration.media.audio.as_ref(),
-        configuration.media.video.as_ref(),
-        configuration.encoding_type == MediaEncodingType::Webrtc,
-        false,
+        &configuration.media,
+        MediaConfigurationType::Encoding(configuration.encoding_type),
     )
 }
 
 fn validate_media_configuration(
-    audio: Option<&AudioConfiguration>,
-    video: Option<&VideoConfiguration>,
-    is_webrtc: bool,
-    is_decoding: bool,
+    configuration: &MediaConfiguration,
+    configuration_type: MediaConfigurationType,
 ) -> std::result::Result<(), &'static str> {
-    if audio.is_none() && video.is_none() {
+    if configuration.audio.is_none() && configuration.video.is_none() {
         return Err("The configuration needs at least one audio or video member");
     }
-    if let Some(audio) = audio
+    let is_webrtc = matches!(
+        configuration_type,
+        MediaConfigurationType::Decoding(MediaDecodingType::Webrtc)
+            | MediaConfigurationType::Encoding(MediaEncodingType::Webrtc)
+    );
+    if let Some(audio) = &configuration.audio
         && !valid_media_content_type(&audio.content_type, "audio/", is_webrtc)
     {
         return Err("The audio configuration dictionary is not valid");
     }
-    if let Some(video) = video {
+    if let Some(video) = &configuration.video {
         if !video.framerate.is_finite() || video.framerate <= 0.0 {
             return Err("The video configuration framerate must be finite and positive");
         }
-        if !valid_media_content_type(&video.content_type, "video/", is_webrtc) {
-            return Err("The video configuration dictionary is not valid");
+        if !matches!(
+            configuration_type,
+            MediaConfigurationType::Decoding(
+                MediaDecodingType::File | MediaDecodingType::MediaSource
+            )
+        ) && (video.hdr_metadata_type.is_some()
+            || video.color_gamut.is_some()
+            || video.transfer_function.is_some())
+        {
+            return Err("HDR and color options are only valid for file or media-source decoding");
         }
-        if (!is_webrtc || is_decoding) && video.scalability_mode.is_some() {
+        if !matches!(
+            configuration_type,
+            MediaConfigurationType::Encoding(MediaEncodingType::Webrtc)
+        ) && video.scalability_mode.is_some()
+        {
             return Err("scalabilityMode is only valid for WebRTC encoding");
         }
-        if (!is_webrtc || !is_decoding) && video.spatial_scalability.is_some() {
-            return Err("spatialScalability is only valid for WebRTC decoding");
+        if matches!(configuration_type, MediaConfigurationType::Encoding(_))
+            && video.spatial_scalability.is_some()
+        {
+            return Err("spatialScalability is only valid for decoding");
+        }
+        if !valid_media_content_type(&video.content_type, "video/", is_webrtc) {
+            return Err("The video configuration dictionary is not valid");
         }
     }
     Ok(())

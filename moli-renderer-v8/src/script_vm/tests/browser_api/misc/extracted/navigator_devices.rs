@@ -1,6 +1,18 @@
 use super::*;
 
 #[test]
+fn media_capabilities_video_members_apply_to_the_declared_query_type() {
+    let mut vm = new_storage_test_vm("https://media-capabilities-video-options.test/");
+    vm.eval(include_str!("media_capabilities_video_options.js"))
+        .unwrap();
+    vm.eval("0").unwrap();
+    assert_eq!(
+        vm.eval("__mediaCapabilitiesVideoOptionsResult").unwrap(),
+        "ok"
+    );
+}
+
+#[test]
 fn media_capabilities_inherited_members_convert_before_derived_getters() {
     let mut vm =
         new_storage_page_task_executor_test_vm("https://media-capabilities-conversion.test/");
