@@ -71,14 +71,13 @@ html/browsers/browsing-the-web/history-traversal/pageswap/pageswap-replace-navig
 html/browsers/browsing-the-web/navigating-across-documents/009.html
 html/browsers/browsing-the-web/navigating-across-documents/replace-before-load/form-submit-popup.html
 html/browsers/browsing-the-web/navigating-across-documents/unknown-protocol-reload-crash.html
-html/browsers/history/the-history-interface/history_pushstate_url_rewriting.html
 html/browsers/history/the-history-interface/joint_session_history/002.html
 html/browsers/history/the-history-interface/traverse_the_history_1.html
-html/browsers/history/the-history-interface/traverse_the_history_4.html
 html/browsers/history/the-history-interface/traverse_the_history_unload_1.html
 html/browsers/history/the-history-interface/traverse_the_history_write_after_load_1.html
 html/browsers/history/the-location-interface/location_hash.html
 html/browsers/history/the-location-interface/location_replace_session_history.html
+html/browsers/origin/cross-origin-objects/window-location-and-location-href-cross-realm-set.html
 html/browsers/origin/relaxing-the-same-origin-restriction/document_domain_setter.html
 html/browsers/sandboxing/sandbox-document-open.html
 html/browsers/sandboxing/sandbox-window-open-srcdoc.html
@@ -107,7 +106,6 @@ html/editing/the-hidden-attribute/hidden-until-found-and-details.html
 html/interaction/focus/the-autofocus-attribute/document-with-fragment-empty.html
 html/interaction/focus/the-autofocus-attribute/document-with-fragment-nonexistent.html
 html/interaction/focus/the-autofocus-attribute/document-with-fragment-top.html
-html/semantics/document-metadata/the-meta-element/pragma-directives/attr-meta-http-equiv-refresh/allow-scripts-flag-changing-1.html
 html/semantics/document-metadata/the-meta-element/pragma-directives/attr-meta-http-equiv-refresh/remove-from-document.html
 html/semantics/embedded-content/the-embed-element/embed-change-src.html
 html/semantics/embedded-content/the-iframe-element/change_parentage.html
@@ -124,13 +122,11 @@ html/semantics/embedded-content/the-img-element/image-loading-lazy-move-into-scr
 html/semantics/embedded-content/the-img-element/image-loading-lazy-zero-intersection-area.html
 html/semantics/embedded-content/the-img-element/image-loading-lazy.html
 html/semantics/embedded-content/the-img-element/sizes/implicit-sizes-ignores-width.html
-html/semantics/embedded-content/the-img-element/sizes/parse-a-sizes-attribute-display-none.html
 html/semantics/embedded-content/the-img-element/sizes/parse-a-sizes-attribute-standards-mode.html
 html/semantics/embedded-content/the-img-element/sizes/sizes-auto-dynamic-attributes.html
 html/semantics/embedded-content/the-img-element/sizes/sizes-auto-resize-observer-removes-auto.html
 html/semantics/embedded-content/the-img-element/sizes/sizes-auto.html
 html/semantics/embedded-content/the-img-element/srcset/srcset-w-reselect-on-resize.html
-html/semantics/forms/form-submission-0/form-double-submit-input-type-change.html
 html/semantics/forms/the-button-element/button-submit-remove-children.html
 html/semantics/links/links-created-by-a-and-area-elements/target_blank_implicit_noopener_base.html
 html/semantics/popovers/popover-document-open.html
@@ -153,7 +149,6 @@ import-maps/data-driven/resolving.html?scopes.json
 import-maps/data-driven/resolving.html?tricky-specifiers.json
 import-maps/data-driven/resolving.html?url-specifiers-schemes.json
 import-maps/data-driven/resolving.html?url-specifiers.json
-import-maps/dynamic-integrity.html
 infrastructure/assumptions/allowed-to-play.html
 infrastructure/channels/test_call.html
 infrastructure/channels/test_postMessage.html
@@ -164,8 +159,7 @@ navigation-api/navigate-event/defer/tentative/defer-restore-callback-abort.html
 navigation-api/navigate-event/defer/tentative/defer-same-document.html
 navigation-api/navigate-event/intercept-cross-origin.html
 navigation-api/navigate-event/navigate-form-requestSubmit.html
-navigation-api/navigation-activation/activation-after-bfcache-cross-origin.html
-navigation-api/navigation-activation/activation-after-bfcache.html
+navigation-api/navigate-event/navigate-history-back-bfcache.html
 navigation-api/navigation-activation/activation-traverse-not-in-entries.html
 navigation-api/navigation-methods/return-value/traverseTo-detach-cross-document-before-navigate-event.html
 navigation-api/navigation-methods/return-value/traverseTo-detach-same-document-before-navigate-event.html
@@ -187,8 +181,8 @@ page-visibility/onvisibilitychange.html
 page-visibility/unload-bubbles.html
 page-visibility/unload.html
 preload/preload-link-cached-stylesheet-different-doc.html
-print/crashtests/reload-crash.html
 requestidlecallback/callback-suspended.html
+resource-timing/iframe-sequence-of-events.html
 resource-timing/input-sequence-of-events.html
 resource-timing/tentative/initiator-url/post-message-shared-worker.html
 resource-timing/tentative/initiator-url/post-message-worker.html
@@ -227,6 +221,7 @@ service-workers/service-worker/registration-service-worker-attributes.https.html
 service-workers/service-worker/resource-timing-fetch-variants.https.html
 service-workers/service-worker/secure-context.https.html
 service-workers/service-worker/skip-waiting-without-client.https.html
+service-workers/service-worker/static-router-subresource.https.html
 service-workers/service-worker/unregister-immediately-before-installed.https.html
 service-workers/service-worker/unregister-immediately-during-extendable-events.https.html
 streams/transferable/deserialize-error.window.js?moli-wpt-script=window

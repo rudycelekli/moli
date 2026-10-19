@@ -4108,6 +4108,7 @@ dom/nodes/Node-replaceChild.html
 dom/nodes/Node-textContent.html
 dom/nodes/NodeList-Iterable.html
 dom/nodes/NodeList-static-length-getter-tampered-1.html
+dom/nodes/NodeList-static-length-getter-tampered-2.html
 dom/nodes/NodeList-static-length-getter-tampered-3.html
 dom/nodes/NodeList-static-length-getter-tampered-indexOf-1.html
 dom/nodes/NodeList-static-length-getter-tampered-indexOf-2.html
@@ -6265,6 +6266,7 @@ html/semantics/document-metadata/the-meta-element/color-scheme/meta-color-scheme
 html/semantics/document-metadata/the-meta-element/color-scheme/meta-color-scheme-single-value-in-shadow-tree.html
 html/semantics/document-metadata/the-meta-element/http-equiv-and-name-1.html
 html/semantics/document-metadata/the-meta-element/http-equiv-and-name-2.html
+html/semantics/document-metadata/the-meta-element/pragma-directives/attr-meta-http-equiv-refresh/allow-scripts-flag-changing-1.html
 html/semantics/document-metadata/the-meta-element/pragma-directives/attr-meta-http-equiv-refresh/allow-scripts-flag-changing-2.html
 html/semantics/document-metadata/the-meta-element/pragma-directives/attr-meta-http-equiv-refresh/dynamic-append.html
 html/semantics/document-metadata/the-meta-element/pragma-directives/attr-meta-http-equiv-refresh/not-in-shadow-tree.html
@@ -6388,6 +6390,7 @@ html/semantics/embedded-content/the-iframe-element/sandbox_028.htm
 html/semantics/embedded-content/the-iframe-element/sandbox_030.htm
 html/semantics/embedded-content/the-iframe-element/sandbox_031.htm
 html/semantics/embedded-content/the-iframe-element/sandbox_032.htm
+html/semantics/embedded-content/the-iframe-element/src-repeated-in-ancestor.html
 html/semantics/embedded-content/the-iframe-element/srcdoc-anchor.html
 html/semantics/embedded-content/the-iframe-element/srcdoc-attribute-reset.html
 html/semantics/embedded-content/the-iframe-element/srcdoc-removed-iframe-crash.html
@@ -6493,6 +6496,7 @@ html/semantics/forms/form-submission-0/form-data-set-usv.html
 html/semantics/forms/form-submission-0/form-double-submit-2.html
 html/semantics/forms/form-submission-0/form-double-submit-3.html
 html/semantics/forms/form-submission-0/form-double-submit-default-action.html
+html/semantics/forms/form-submission-0/form-double-submit-input-type-change.html
 html/semantics/forms/form-submission-0/form-double-submit-multiple-targets.html
 html/semantics/forms/form-submission-0/form-double-submit-preventdefault-click.html
 html/semantics/forms/form-submission-0/form-double-submit-to-different-origin-frame.html
@@ -7662,6 +7666,7 @@ html/webappapis/the-windoworworkerglobalscope-mixin/Worker_Self_Origin.html
 html/webappapis/timers/setinterval-cross-realm-callback-report-exception.html
 html/webappapis/timers/setinterval-settimeout-clamping.html
 html/webappapis/timers/settimeout-cross-realm-callback-report-exception.html
+html/webappapis/timers/timer-nesting-not-inherited-in-microtask.html
 html/webappapis/user-prompts/print-during-beforeunload.html
 html/webappapis/user-prompts/print-during-unload.html
 html/webappapis/user-prompts/print-in-detached-frame.html
@@ -7676,6 +7681,7 @@ import-maps/csp/hash.html
 import-maps/csp/nonce-failure.html
 import-maps/csp/nonce.html
 import-maps/csp/unsafe-inline.html
+import-maps/dynamic-integrity.html
 import-maps/dynamic-module-map-key.html
 import-maps/external-import-map-errors.html
 import-maps/module-map-key.html
@@ -8401,6 +8407,7 @@ service-workers/service-worker/activate-event-after-install-state-change.https.h
 service-workers/service-worker/activation-after-registration.https.html
 service-workers/service-worker/claim-fetch.https.html
 service-workers/service-worker/claim-not-using-registration.https.html
+service-workers/service-worker/claim-shared-worker-fetch.https.html
 service-workers/service-worker/client-id.https.html
 service-workers/service-worker/client-url-of-blob-url-worker.https.html
 service-workers/service-worker/controller-on-disconnect.https.html
@@ -9016,8 +9023,9 @@ trusted-types/should-sink-type-mismatch-violation-be-blocked-by-csp-003.html
 trusted-types/trusted-types-duplicate-names-list-report-only.html
 trusted-types/trusted-types-eval-reporting-no-unsafe-eval.html
 trusted-types/trusted-types-eval-reporting-report-only.html
-trusted-types/trusted-types-navigation.html?01-05
+trusted-types/trusted-types-navigation.html?11-15
 trusted-types/trusted-types-navigation.html?16-20
+trusted-types/trusted-types-navigation.html?36-last
 trusted-types/trusted-types-reporting-for-DOMParser-parseFromString.html
 trusted-types/trusted-types-reporting-for-DedicatedWorker-DedicatedWorker-constructor.html
 trusted-types/trusted-types-reporting-for-DedicatedWorker-eval.html
@@ -9836,6 +9844,7 @@ xhr/xmlhttprequest-timeout-worker-aborted.html?only open()ed, not aborted
 xhr/xmlhttprequest-timeout-worker-overrides.html?timeout disabled after initially set
 xhr/xmlhttprequest-timeout-worker-overrides.html?timeout enabled after initially disabled
 xhr/xmlhttprequest-timeout-worker-overrides.html?timeout overrides load after a delay
+xhr/xmlhttprequest-timeout-worker-overridesexpires.html?timeout set to expired value before load fires
 xhr/xmlhttprequest-timeout-worker-overridesexpires.html?timeout set to expiring value after load fires
 xhr/xmlhttprequest-timeout-worker-overridesexpires.html?timeout set to non-expiring value after timeout fires
 xhr/xmlhttprequest-timeout-worker-simple.html?load fires normally

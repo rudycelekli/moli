@@ -2666,8 +2666,10 @@ html/browsers/history/the-history-interface/005.html
 html/browsers/history/the-history-interface/009.html
 html/browsers/history/the-history-interface/010.html
 html/browsers/history/the-history-interface/history_go_undefined.html
+html/browsers/history/the-history-interface/history_pushstate_url_rewriting.html
 html/browsers/history/the-history-interface/traverse_the_history_2.html
 html/browsers/history/the-history-interface/traverse_the_history_3.html
+html/browsers/history/the-history-interface/traverse_the_history_4.html
 html/browsers/history/the-history-interface/traverse_the_history_5.html
 html/browsers/history/the-location-interface/assign_before_load.html
 html/browsers/history/the-location-interface/document_location.html
@@ -2681,7 +2683,6 @@ html/browsers/history/the-location-interface/scripted_form_submit_assign_during_
 html/browsers/history/the-session-history-of-browsing-contexts/navigation-in-onload.html
 html/browsers/origin/cross-origin-objects/cross-origin-due-to-document-domain-only.html
 html/browsers/origin/cross-origin-objects/cross-origin-objects-on-new-window.html
-html/browsers/origin/cross-origin-objects/window-location-and-location-href-cross-realm-set.html
 html/browsers/origin/relaxing-the-same-origin-restriction/document_domain.html
 html/browsers/sandboxing/sandbox-popup-inherits-script-blocking.html
 html/browsers/the-window-object/accessing-other-browsing-contexts/indexed-browsing-contexts-01.html
@@ -2859,7 +2860,6 @@ html/semantics/embedded-content/the-iframe-element/sandbox-ascii-case-insensitiv
 html/semantics/embedded-content/the-iframe-element/sandbox-inherit-to-blank-document-unsandboxed.html
 html/semantics/embedded-content/the-iframe-element/sandbox_011.htm
 html/semantics/embedded-content/the-iframe-element/sandbox_029.htm
-html/semantics/embedded-content/the-iframe-element/src-repeated-in-ancestor.html
 html/semantics/embedded-content/the-img-element/current-pixel-density/error.html
 html/semantics/embedded-content/the-img-element/currentSrc-blob-cache.html
 html/semantics/embedded-content/the-img-element/decode/image-decode-image-document.html
@@ -2883,6 +2883,7 @@ html/semantics/embedded-content/the-img-element/natural-size-orientation.html
 html/semantics/embedded-content/the-img-element/naturalWidth-naturalHeight-width-height.html
 html/semantics/embedded-content/the-img-element/relevant-mutations-lazy.html
 html/semantics/embedded-content/the-img-element/relevant-mutations.html
+html/semantics/embedded-content/the-img-element/sizes/parse-a-sizes-attribute-display-none.html
 html/semantics/embedded-content/the-img-element/sizes/parse-a-sizes-attribute-quirks-mode.html
 html/semantics/embedded-content/the-img-element/sizes/parse-a-sizes-attribute-width-1000px.html
 html/semantics/embedded-content/the-img-element/source-media-outside-doc.html
@@ -3059,7 +3060,6 @@ html/webappapis/scripting/processing-model-2/unhandled-promise-rejections/promis
 html/webappapis/scripting/processing-model-2/unhandled-promise-rejections/promise-rejection-events.html
 html/webappapis/scripting/processing-model-2/unhandled-promise-rejections/promise-resolution-order.html
 html/webappapis/scripting/processing-model-2/window-onerror-with-cross-frame-event-listeners-5.html
-html/webappapis/timers/timer-nesting-not-inherited-in-microtask.html
 inert/dynamic-inert-on-focused-element.html
 inert/inert-and-find-flat-tree.html
 inert/inert-and-find.html
@@ -3111,9 +3111,10 @@ navigation-api/navigate-event/defer/tentative/defer-with-single-handler-reject.h
 navigation-api/navigate-event/defer/tentative/defer-with-single-handler.html
 navigation-api/navigate-event/defer/tentative/restore-after-bfcache.html
 navigation-api/navigate-event/intercept-detach-multiple.html
-navigation-api/navigate-event/navigate-history-back-bfcache.html
 navigation-api/navigate-event/navigation-back-cross-document-preventDefault.html
 navigation-api/navigate-event/navigation-traverseTo-in-iframe-same-document-preventDefault.html
+navigation-api/navigation-activation/activation-after-bfcache-cross-origin.html
+navigation-api/navigation-activation/activation-after-bfcache.html
 navigation-api/navigation-history-entry/entries-after-bfcache-in-iframe.html
 navigation-api/navigation-history-entry/entries-after-bfcache.html
 navigation-api/navigation-methods/reload-service-worker-fetch-event.html
@@ -3167,7 +3168,6 @@ requestidlecallback/deadline-max-rAF.html
 requestidlecallback/deadline-max-timeout-dynamic.html
 resource-timing/cached-image-gets-single-entry.html
 resource-timing/document-domain-no-impact-opener.html
-resource-timing/iframe-sequence-of-events.html
 resource-timing/initiator-type/input.html
 resource-timing/initiator-type/link.html
 resource-timing/initiator-type/picture.html
@@ -3220,7 +3220,6 @@ service-workers/service-worker/ServiceWorkerGlobalScope/update.https.html
 service-workers/service-worker/active.https.html
 service-workers/service-worker/add-routes.https.html
 service-workers/service-worker/claim-affect-other-registration.https.html
-service-workers/service-worker/claim-shared-worker-fetch.https.html
 service-workers/service-worker/claim-using-registration.https.html
 service-workers/service-worker/claim-worker-fetch.https.html
 service-workers/service-worker/client-navigate.https.html
@@ -3283,7 +3282,6 @@ service-workers/service-worker/static-router-invalid-rules.https.html
 service-workers/service-worker/static-router-main-resource.https.html
 service-workers/service-worker/static-router-no-fetch-handler.https.html
 service-workers/service-worker/static-router-request-destination.https.html
-service-workers/service-worker/static-router-subresource.https.html
 service-workers/service-worker/synced-state.https.html
 service-workers/service-worker/unregister-then-register-new-script.https.html
 service-workers/service-worker/unregister-then-register.https.html
@@ -3486,5 +3484,4 @@ xhr/send-entity-body-document-bogus.htm
 xhr/send-entity-body-document.htm
 xhr/send-no-response-event-order.htm
 xhr/send-receive-utf16.htm
-xhr/xmlhttprequest-timeout-worker-overridesexpires.html?timeout set to expired value before load fires
 xml/xml-prolog-accepted-versions.html
