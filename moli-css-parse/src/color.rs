@@ -149,6 +149,29 @@ fn absolute_srgb_bytes(color: AbsoluteColor) -> [u8; 4] {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use style_traits::ToCss;
+
+    #[test]
+    fn color_mix_preserves_zero_weights_and_serializes_omitted_percentages() {
+        // CSS Color 5 no longer rejects a zero-sum mix. The frozen WPT
+        // snapshot predates this rule and the percentage serialization update.
+        for value in [
+            "color-mix(in srgb, red 0%, blue 0%)",
+            "color-mix(in srgb, red 0%)",
+            "color-mix(in srgb, red 0%, green 0%, blue 0%)",
+        ] {
+            assert!(parse_specified_color(value).is_some(), "{value}");
+            assert_eq!(parse_css_color_to_srgb_bytes(value).unwrap()[3], 0);
+        }
+        assert!(parse_specified_color("color-mix(in srgb, red -1%, blue)").is_none());
+        assert!(parse_specified_color("color-mix(in srgb, red 101%, blue)").is_none());
+        assert_eq!(
+            parse_specified_color("color-mix(contrast-color(blue) 100%, purple)")
+                .unwrap()
+                .to_css_string(),
+            "color-mix(contrast-color(blue) 100%, purple 0%)",
+        );
+    }
 
     #[test]
     fn css_colors_convert_to_opaque_srgb_hex() {
