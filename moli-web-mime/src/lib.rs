@@ -9,6 +9,7 @@ mod parse;
 mod resource;
 mod response_policy;
 mod sniffing;
+mod video_codec;
 
 pub use classification::{
     is_audio_mime, is_audio_mime_essence, is_binary_document_mime_type, is_css_mime,
@@ -52,6 +53,9 @@ pub use sniffing::{
     MimeSniffingContext, RESOURCE_HEADER_BYTE_LIMIT, computed_mime_type, resource_header,
     sniff_archive_mime_type, sniff_audio_video_mime_type, sniff_font_mime_type,
     sniff_image_mime_type, sniff_text_or_binary, sniff_unknown_mime_type,
+};
+pub use video_codec::{
+    InvalidVideoCodecColorSpace, VideoCodecColorSpace, parse_video_codec_color_space,
 };
 
 #[cfg(test)]

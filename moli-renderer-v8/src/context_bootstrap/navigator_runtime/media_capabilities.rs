@@ -522,5 +522,39 @@ fn configuration_supported(
     }) && configuration.video.as_ref().is_none_or(|video| {
         moli_web_mime::media_mime_support(&video.content_type)
             != moli_web_mime::MediaMimeSupport::Unsupported
+            && video_codec_color_supported(video)
+    })
+}
+
+fn video_codec_color_supported(video: &VideoConfiguration) -> bool {
+    let Some(codec) = moli_web_mime::mime_parameter(&video.content_type, "codecs") else {
+        return true;
+    };
+    let Ok(color_space) = moli_web_mime::parse_video_codec_color_space(
+        codec.trim_matches(|value: char| value.is_ascii_whitespace()),
+    ) else {
+        return false;
+    };
+    let Some(color_space) = color_space else {
+        return true;
+    };
+    // Compare each supplied member independently. An unspecified CICP component
+    // leaves that requirement to the configuration rather than inventing a color.
+    video.color_gamut.is_none_or(|gamut| {
+        color_space.primaries.is_none_or(|primaries| match gamut {
+            ColorGamut::Srgb => primaries == 1,
+            ColorGamut::P3 => matches!(primaries, 11 | 12),
+            ColorGamut::Rec2020 => primaries == 9,
+        })
+    }) && video.transfer_function.is_none_or(|transfer| {
+        color_space
+            .transfer
+            .is_none_or(|characteristics| match transfer {
+                // BT.709 is the codec default for conventional SDR; 13 explicitly
+                // signals the IEC 61966-2-1 (sRGB) transfer characteristic.
+                TransferFunction::Srgb => matches!(characteristics, 1 | 13),
+                TransferFunction::Pq => characteristics == 16,
+                TransferFunction::Hlg => characteristics == 18,
+            })
     })
 }

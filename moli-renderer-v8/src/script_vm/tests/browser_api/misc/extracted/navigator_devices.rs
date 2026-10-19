@@ -1,6 +1,18 @@
 use super::*;
 
 #[test]
+fn media_capabilities_codec_colors_constrain_support_without_rejecting_the_dictionary() {
+    let mut vm = new_storage_test_vm("https://media-capabilities-codec-color.test/");
+    vm.eval(include_str!("media_capabilities_codec_color.js"))
+        .unwrap();
+    vm.eval("0").unwrap();
+    assert_eq!(
+        vm.eval("__mediaCapabilitiesCodecColorResult").unwrap(),
+        "ok"
+    );
+}
+
+#[test]
 fn media_capabilities_mime_rules_distinguish_containers_and_rtp_codecs() {
     let mut vm = new_storage_test_vm("https://media-capabilities-mime.test/");
     vm.eval(include_str!("media_capabilities_mime.js")).unwrap();
