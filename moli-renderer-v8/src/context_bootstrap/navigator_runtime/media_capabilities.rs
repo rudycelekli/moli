@@ -1,7 +1,10 @@
 use super::super::*;
 use super::encrypted_media::MediaKeysRequirement;
 use crate::web_api_interfaces;
-use crate::{util::get_private_value, webidl};
+use crate::{
+    util::get_private_value,
+    webidl::{self, SnapshotPrototype, WebIdlDictionarySerialize},
+};
 use moli_webapi_declare::{WebApiFunctionTemplate, WebApiObject};
 
 const MEDIA_CAPABILITIES_SECURE_CONTEXT_SLOT: &str = "__moliMediaCapabilitiesSecureContext";
@@ -70,30 +73,11 @@ enum MediaDecodingType {
     Webrtc,
 }
 
-impl MediaDecodingType {
-    fn as_str(self) -> &'static str {
-        match self {
-            Self::File => "file",
-            Self::MediaSource => "media-source",
-            Self::Webrtc => "webrtc",
-        }
-    }
-}
-
 #[derive(Clone, Copy, Debug, Eq, PartialEq, webidl::WebIdlEnum)]
 #[webidl(name = "MediaEncodingType")]
 enum MediaEncodingType {
     Record,
     Webrtc,
-}
-
-impl MediaEncodingType {
-    fn as_str(self) -> &'static str {
-        match self {
-            Self::Record => "record",
-            Self::Webrtc => "webrtc",
-        }
-    }
 }
 
 #[derive(Clone, Copy, Debug, webidl::WebIdlEnum)]
@@ -107,32 +91,12 @@ enum HdrMetadataType {
     SmpteSt2094_40,
 }
 
-impl HdrMetadataType {
-    fn as_str(self) -> &'static str {
-        match self {
-            Self::SmpteSt2086 => "smpteSt2086",
-            Self::SmpteSt2094_10 => "smpteSt2094-10",
-            Self::SmpteSt2094_40 => "smpteSt2094-40",
-        }
-    }
-}
-
 #[derive(Clone, Copy, Debug, webidl::WebIdlEnum)]
 #[webidl(name = "ColorGamut")]
 enum ColorGamut {
     Srgb,
     P3,
     Rec2020,
-}
-
-impl ColorGamut {
-    fn as_str(self) -> &'static str {
-        match self {
-            Self::Srgb => "srgb",
-            Self::P3 => "p3",
-            Self::Rec2020 => "rec2020",
-        }
-    }
 }
 
 #[derive(Clone, Copy, Debug, webidl::WebIdlEnum)]
@@ -143,100 +107,99 @@ enum TransferFunction {
     Hlg,
 }
 
-impl TransferFunction {
-    fn as_str(self) -> &'static str {
-        match self {
-            Self::Srgb => "srgb",
-            Self::Pq => "pq",
-            Self::Hlg => "hlg",
-        }
-    }
-}
-
 #[derive(webidl::WebIdlDictionary)]
-#[webidl(prefix = "AudioConfiguration")]
+#[webidl(prefix = "AudioConfiguration", snapshot)]
 struct AudioConfiguration {
-    #[webidl(required)]
+    // Snapshot order preserves result keys independently of input conversion.
+    #[webidl(required, snapshot_order = 0)]
     content_type: String,
+    #[webidl(snapshot_order = 1)]
     channels: Option<String>,
+    #[webidl(snapshot_order = 2)]
     bitrate: Option<u64>,
+    #[webidl(snapshot_order = 3)]
     samplerate: Option<u32>,
+    #[webidl(snapshot_order = 4)]
     spatial_rendering: Option<bool>,
 }
 
 #[derive(webidl::WebIdlDictionary)]
-#[webidl(prefix = "VideoConfiguration")]
+#[webidl(prefix = "VideoConfiguration", snapshot)]
 struct VideoConfiguration {
-    #[webidl(required)]
+    #[webidl(required, snapshot_order = 0)]
     content_type: String,
-    #[webidl(required)]
+    #[webidl(required, snapshot_order = 1)]
     width: u32,
-    #[webidl(required)]
+    #[webidl(required, snapshot_order = 2)]
     height: u32,
-    #[webidl(required)]
+    #[webidl(required, snapshot_order = 3)]
     bitrate: u64,
-    #[webidl(required, converter = "double")]
+    #[webidl(required, converter = "double", snapshot_order = 4)]
     framerate: f64,
+    #[webidl(snapshot_order = 5)]
     has_alpha_channel: Option<bool>,
-    #[webidl(converter = "enum")]
+    #[webidl(converter = "enum", snapshot_order = 6)]
     hdr_metadata_type: Option<HdrMetadataType>,
-    #[webidl(converter = "enum")]
+    #[webidl(converter = "enum", snapshot_order = 7)]
     color_gamut: Option<ColorGamut>,
-    #[webidl(converter = "enum")]
+    #[webidl(converter = "enum", snapshot_order = 8)]
     transfer_function: Option<TransferFunction>,
+    #[webidl(snapshot_order = 9)]
     scalability_mode: Option<String>,
+    #[webidl(snapshot_order = 10)]
     spatial_scalability: Option<bool>,
 }
 
 #[derive(webidl::WebIdlDictionary)]
-#[webidl(prefix = "KeySystemTrackConfiguration")]
+#[webidl(prefix = "KeySystemTrackConfiguration", snapshot)]
 struct KeySystemTrackConfiguration {
-    #[webidl(default = "")]
+    #[webidl(default = "", snapshot_order = 0)]
     robustness: String,
-    #[webidl(with = optional_nullable_dom_string_member)]
+    #[webidl(with = optional_nullable_dom_string_member, snapshot_order = 1)]
+    #[webidl(snapshot_kind = webidl::SnapshotKind::Nullable(&webidl::SnapshotKind::Scalar))]
     encryption_scheme: Option<Option<String>>,
 }
 
 #[derive(webidl::WebIdlDictionary)]
-#[webidl(prefix = "MediaCapabilitiesKeySystemConfiguration")]
+#[webidl(prefix = "MediaCapabilitiesKeySystemConfiguration", snapshot)]
 struct MediaCapabilitiesKeySystemConfiguration {
-    #[webidl(required)]
+    #[webidl(required, snapshot_order = 0)]
     key_system: String,
-    #[webidl(default = "")]
+    #[webidl(default = "", snapshot_order = 1)]
     init_data_type: String,
-    #[webidl(converter = "enum", default = MediaKeysRequirement::Optional)]
+    #[webidl(converter = "enum", default = MediaKeysRequirement::Optional, snapshot_order = 2)]
     distinctive_identifier: MediaKeysRequirement,
-    #[webidl(converter = "enum", default = MediaKeysRequirement::Optional)]
+    #[webidl(converter = "enum", default = MediaKeysRequirement::Optional, snapshot_order = 3)]
     persistent_state: MediaKeysRequirement,
-    #[webidl(sequence)]
+    #[webidl(sequence, snapshot_order = 4)]
     session_types: Option<Vec<String>>,
-    #[webidl(dictionary)]
+    #[webidl(dictionary, snapshot_order = 5)]
     audio: Option<KeySystemTrackConfiguration>,
-    #[webidl(dictionary)]
+    #[webidl(dictionary, snapshot_order = 6)]
     video: Option<KeySystemTrackConfiguration>,
 }
 
 #[derive(webidl::WebIdlDictionary)]
-#[webidl(prefix = "MediaDecodingConfiguration")]
+#[webidl(prefix = "MediaDecodingConfiguration", snapshot)]
 struct MediaDecodingConfiguration {
-    #[webidl(dictionary)]
+    #[webidl(dictionary, snapshot_order = 0)]
     audio: Option<AudioConfiguration>,
-    #[webidl(name = "keySystemConfiguration", dictionary)]
+    #[webidl(name = "keySystemConfiguration", dictionary, snapshot_order = 3)]
     key_system_configuration: Option<MediaCapabilitiesKeySystemConfiguration>,
-    #[webidl(name = "type", required, converter = "enum")]
+    #[webidl(name = "type", required, converter = "enum", snapshot_order = 2)]
     decoding_type: MediaDecodingType,
-    #[webidl(dictionary)]
+    #[webidl(dictionary, snapshot_order = 1)]
     video: Option<VideoConfiguration>,
 }
 
 #[derive(webidl::WebIdlDictionary)]
-#[webidl(prefix = "MediaEncodingConfiguration")]
+#[webidl(prefix = "MediaEncodingConfiguration", snapshot)]
 struct MediaEncodingConfiguration {
-    #[webidl(dictionary)]
+    #[webidl(dictionary, snapshot_order = 0)]
     audio: Option<AudioConfiguration>,
-    #[webidl(name = "type", required, converter = "enum")]
+    #[webidl(name = "type", required, converter = "enum", snapshot_order = 2)]
     encoding_type: MediaEncodingType,
-    #[webidl(dictionary)]
+    #[webidl(dictionary, snapshot_order = 1)]
     video: Option<VideoConfiguration>,
 }
 
@@ -309,7 +272,8 @@ fn media_capabilities_decoding_info_callback<'s>(
                 "Encrypted media capabilities require a secure context",
             )
         } else {
-            let Some(configuration_object) = decoding_configuration_object(scope, &configuration)
+            let Some(configuration_object) =
+                configuration.to_js_snapshot(scope, SnapshotPrototype::Ordinary)
             else {
                 rv.set_undefined();
                 return;
@@ -333,7 +297,9 @@ fn media_capabilities_decoding_info_callback<'s>(
         return;
     }
 
-    let Some(configuration_object) = decoding_configuration_object(scope, &configuration) else {
+    let Some(configuration_object) =
+        configuration.to_js_snapshot(scope, SnapshotPrototype::Ordinary)
+    else {
         rv.set_undefined();
         return;
     };
@@ -371,7 +337,9 @@ fn media_capabilities_encoding_info_callback<'s>(
         set_rejected_promise(scope, &mut rv, reason);
         return;
     }
-    let Some(configuration_object) = encoding_configuration_object(scope, &configuration) else {
+    let Some(configuration_object) =
+        configuration.to_js_snapshot(scope, SnapshotPrototype::Ordinary)
+    else {
         rv.set_undefined();
         return;
     };
@@ -621,211 +589,4 @@ fn configuration_supported(
         moli_web_mime::media_mime_support(&video.content_type)
             != moli_web_mime::MediaMimeSupport::Unsupported
     })
-}
-
-fn decoding_configuration_object<'s>(
-    scope: &mut v8::PinScope<'s, '_>,
-    configuration: &MediaDecodingConfiguration,
-) -> Option<v8::Local<'s, v8::Object>> {
-    let object = media_configuration_object(
-        scope,
-        configuration.audio.as_ref(),
-        configuration.video.as_ref(),
-    )?;
-    set_string_property(scope, object, "type", configuration.decoding_type.as_str())?;
-    if let Some(key_system) = configuration.key_system_configuration.as_ref() {
-        let value = key_system_configuration_object(scope, key_system)?;
-        set_object_property(scope, object, "keySystemConfiguration", value)?;
-    }
-    Some(object)
-}
-
-fn encoding_configuration_object<'s>(
-    scope: &mut v8::PinScope<'s, '_>,
-    configuration: &MediaEncodingConfiguration,
-) -> Option<v8::Local<'s, v8::Object>> {
-    let object = media_configuration_object(
-        scope,
-        configuration.audio.as_ref(),
-        configuration.video.as_ref(),
-    )?;
-    set_string_property(scope, object, "type", configuration.encoding_type.as_str())?;
-    Some(object)
-}
-
-fn media_configuration_object<'s>(
-    scope: &mut v8::PinScope<'s, '_>,
-    audio: Option<&AudioConfiguration>,
-    video: Option<&VideoConfiguration>,
-) -> Option<v8::Local<'s, v8::Object>> {
-    let object = v8::Object::new(scope);
-    if let Some(audio) = audio {
-        let audio = audio_configuration_object(scope, audio)?;
-        set_object_property(scope, object, "audio", audio)?;
-    }
-    if let Some(video) = video {
-        let video = video_configuration_object(scope, video)?;
-        set_object_property(scope, object, "video", video)?;
-    }
-    Some(object)
-}
-
-fn audio_configuration_object<'s>(
-    scope: &mut v8::PinScope<'s, '_>,
-    configuration: &AudioConfiguration,
-) -> Option<v8::Local<'s, v8::Object>> {
-    let object = v8::Object::new(scope);
-    set_string_property(scope, object, "contentType", &configuration.content_type)?;
-    if let Some(value) = configuration.channels.as_deref() {
-        set_string_property(scope, object, "channels", value)?;
-    }
-    if let Some(value) = configuration.bitrate {
-        set_number_property(scope, object, "bitrate", value as f64)?;
-    }
-    if let Some(value) = configuration.samplerate {
-        set_number_property(scope, object, "samplerate", f64::from(value))?;
-    }
-    if let Some(value) = configuration.spatial_rendering {
-        set_bool_property(scope, object, "spatialRendering", value)?;
-    }
-    Some(object)
-}
-
-fn video_configuration_object<'s>(
-    scope: &mut v8::PinScope<'s, '_>,
-    configuration: &VideoConfiguration,
-) -> Option<v8::Local<'s, v8::Object>> {
-    let object = v8::Object::new(scope);
-    set_string_property(scope, object, "contentType", &configuration.content_type)?;
-    set_number_property(scope, object, "width", f64::from(configuration.width))?;
-    set_number_property(scope, object, "height", f64::from(configuration.height))?;
-    set_number_property(scope, object, "bitrate", configuration.bitrate as f64)?;
-    set_number_property(scope, object, "framerate", configuration.framerate)?;
-    if let Some(value) = configuration.has_alpha_channel {
-        set_bool_property(scope, object, "hasAlphaChannel", value)?;
-    }
-    if let Some(value) = configuration.hdr_metadata_type {
-        set_string_property(scope, object, "hdrMetadataType", value.as_str())?;
-    }
-    if let Some(value) = configuration.color_gamut {
-        set_string_property(scope, object, "colorGamut", value.as_str())?;
-    }
-    if let Some(value) = configuration.transfer_function {
-        set_string_property(scope, object, "transferFunction", value.as_str())?;
-    }
-    if let Some(value) = configuration.scalability_mode.as_deref() {
-        set_string_property(scope, object, "scalabilityMode", value)?;
-    }
-    if let Some(value) = configuration.spatial_scalability {
-        set_bool_property(scope, object, "spatialScalability", value)?;
-    }
-    Some(object)
-}
-
-fn key_system_configuration_object<'s>(
-    scope: &mut v8::PinScope<'s, '_>,
-    configuration: &MediaCapabilitiesKeySystemConfiguration,
-) -> Option<v8::Local<'s, v8::Object>> {
-    let object = v8::Object::new(scope);
-    set_string_property(scope, object, "keySystem", &configuration.key_system)?;
-    set_string_property(scope, object, "initDataType", &configuration.init_data_type)?;
-    set_string_property(
-        scope,
-        object,
-        "distinctiveIdentifier",
-        configuration.distinctive_identifier.as_str(),
-    )?;
-    set_string_property(
-        scope,
-        object,
-        "persistentState",
-        configuration.persistent_state.as_str(),
-    )?;
-    if let Some(session_types) = configuration.session_types.as_ref() {
-        let values = session_types
-            .iter()
-            .map(|value| v8_string(scope, value).map(v8::Local::into))
-            .collect::<Option<Vec<v8::Local<'s, v8::Value>>>>()?;
-        let array = v8::Array::new(scope, values.len() as i32);
-        for (index, value) in values.into_iter().enumerate() {
-            array.set_index(scope, index as u32, value)?;
-        }
-        set_value_property(scope, object, "sessionTypes", array.into())?;
-    }
-    if let Some(audio) = configuration.audio.as_ref() {
-        let value = key_system_track_configuration_object(scope, audio)?;
-        set_object_property(scope, object, "audio", value)?;
-    }
-    if let Some(video) = configuration.video.as_ref() {
-        let value = key_system_track_configuration_object(scope, video)?;
-        set_object_property(scope, object, "video", value)?;
-    }
-    Some(object)
-}
-
-fn key_system_track_configuration_object<'s>(
-    scope: &mut v8::PinScope<'s, '_>,
-    configuration: &KeySystemTrackConfiguration,
-) -> Option<v8::Local<'s, v8::Object>> {
-    let object = v8::Object::new(scope);
-    set_string_property(scope, object, "robustness", &configuration.robustness)?;
-    if let Some(value) = configuration.encryption_scheme.as_ref() {
-        let value = value
-            .as_deref()
-            .and_then(|value| v8_string(scope, value).map(v8::Local::into))
-            .unwrap_or_else(|| v8::null(scope).into());
-        set_value_property(scope, object, "encryptionScheme", value)?;
-    }
-    Some(object)
-}
-
-fn set_string_property(
-    scope: &mut v8::PinScope<'_, '_>,
-    object: v8::Local<'_, v8::Object>,
-    name: &str,
-    value: &str,
-) -> Option<()> {
-    let value = v8_string(scope, value)?;
-    set_value_property(scope, object, name, value.into())
-}
-
-fn set_number_property(
-    scope: &mut v8::PinScope<'_, '_>,
-    object: v8::Local<'_, v8::Object>,
-    name: &str,
-    value: f64,
-) -> Option<()> {
-    let value = v8::Number::new(scope, value);
-    set_value_property(scope, object, name, value.into())
-}
-
-fn set_bool_property(
-    scope: &mut v8::PinScope<'_, '_>,
-    object: v8::Local<'_, v8::Object>,
-    name: &str,
-    value: bool,
-) -> Option<()> {
-    let value = v8::Boolean::new(scope, value);
-    set_value_property(scope, object, name, value.into())
-}
-
-fn set_object_property(
-    scope: &mut v8::PinScope<'_, '_>,
-    object: v8::Local<'_, v8::Object>,
-    name: &str,
-    value: v8::Local<'_, v8::Object>,
-) -> Option<()> {
-    set_value_property(scope, object, name, value.into())
-}
-
-fn set_value_property(
-    scope: &mut v8::PinScope<'_, '_>,
-    object: v8::Local<'_, v8::Object>,
-    name: &str,
-    value: v8::Local<'_, v8::Value>,
-) -> Option<()> {
-    object
-        .set(scope, v8_string(scope, name)?.into(), value)
-        .filter(|set| *set)
-        .map(|_| ())
 }

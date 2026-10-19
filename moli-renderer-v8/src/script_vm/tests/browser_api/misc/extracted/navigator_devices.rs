@@ -1,6 +1,16 @@
 use super::*;
 
 #[test]
+fn media_capabilities_dictionary_snapshots_preserve_conversion_and_define_own_data() {
+    let mut vm =
+        new_storage_page_task_executor_test_vm("https://media-capabilities-snapshot.test/");
+    vm.eval(include_str!("media_capabilities_snapshot.js"))
+        .unwrap();
+    vm.eval("0").unwrap();
+    assert_eq!(vm.eval("__mediaCapabilitiesSnapshotResult").unwrap(), "ok");
+}
+
+#[test]
 fn media_capabilities_nested_dictionaries_validate_null_before_later_getters() {
     let mut vm = new_storage_test_vm("https://media-capabilities-dictionary.test/");
     vm.eval(r#"
