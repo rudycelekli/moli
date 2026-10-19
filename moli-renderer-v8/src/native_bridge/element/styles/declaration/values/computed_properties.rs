@@ -1,6 +1,7 @@
 use super::*;
 
 mod background;
+mod font;
 
 pub(in crate::native_bridge::element::styles) fn style_property_value_with_context(
     runtime: &JsContextHost,
@@ -106,6 +107,9 @@ pub(super) fn computed_style_property_value_after_style_update(
     }
     if property == "font-variant" {
         return computed_font_variant_shorthand_value(runtime, handle, resolution);
+    }
+    if property == "font" {
+        return font::computed_shorthand(runtime, handle, resolution);
     }
     if property == "background" {
         return background::computed_shorthand(runtime, handle, resolution);
