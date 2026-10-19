@@ -1,6 +1,14 @@
 use super::*;
 
 #[test]
+fn media_capabilities_mime_rules_distinguish_containers_and_rtp_codecs() {
+    let mut vm = new_storage_test_vm("https://media-capabilities-mime.test/");
+    vm.eval(include_str!("media_capabilities_mime.js")).unwrap();
+    vm.eval("0").unwrap();
+    assert_eq!(vm.eval("__mediaCapabilitiesMimeResult").unwrap(), "ok");
+}
+
+#[test]
 fn media_capabilities_video_members_apply_to_the_declared_query_type() {
     let mut vm = new_storage_test_vm("https://media-capabilities-video-options.test/");
     vm.eval(include_str!("media_capabilities_video_options.js"))

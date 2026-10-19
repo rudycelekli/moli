@@ -82,6 +82,15 @@ enum MediaConfigurationType {
     Encoding(MediaEncodingType),
 }
 
+impl MediaConfigurationType {
+    fn is_webrtc(self) -> bool {
+        matches!(
+            self,
+            Self::Decoding(MediaDecodingType::Webrtc) | Self::Encoding(MediaEncodingType::Webrtc)
+        )
+    }
+}
+
 #[derive(Clone, Copy, Debug, webidl::WebIdlEnum)]
 #[webidl(name = "HdrMetadataType")]
 enum HdrMetadataType {
@@ -280,8 +289,8 @@ fn media_capabilities_decoding_info_callback<'s>(
         false
     } else {
         configuration_supported(
-            configuration.media.audio.as_ref(),
-            configuration.media.video.as_ref(),
+            &configuration.media,
+            MediaConfigurationType::Decoding(configuration.decoding_type),
         )
     };
     let info = MediaCapabilitiesDecodingInfo {
@@ -319,8 +328,8 @@ fn media_capabilities_encoding_info_callback<'s>(
         return;
     }
     let supported = configuration_supported(
-        configuration.media.audio.as_ref(),
-        configuration.media.video.as_ref(),
+        &configuration.media,
+        MediaConfigurationType::Encoding(configuration.encoding_type),
     );
     let info = MediaCapabilitiesEncodingInfo {
         info: MediaCapabilitiesInfo {
@@ -451,13 +460,13 @@ fn validate_media_configuration(
     if configuration.audio.is_none() && configuration.video.is_none() {
         return Err("The configuration needs at least one audio or video member");
     }
-    let is_webrtc = matches!(
-        configuration_type,
-        MediaConfigurationType::Decoding(MediaDecodingType::Webrtc)
-            | MediaConfigurationType::Encoding(MediaEncodingType::Webrtc)
-    );
+    let is_webrtc = configuration_type.is_webrtc();
     if let Some(audio) = &configuration.audio
-        && !valid_media_content_type(&audio.content_type, "audio/", is_webrtc)
+        && !moli_web_mime::is_valid_media_capabilities_mime_type(
+            &audio.content_type,
+            moli_web_mime::MediaKind::Audio,
+            is_webrtc,
+        )
     {
         return Err("The audio configuration dictionary is not valid");
     }
@@ -488,81 +497,29 @@ fn validate_media_configuration(
         {
             return Err("spatialScalability is only valid for decoding");
         }
-        if !valid_media_content_type(&video.content_type, "video/", is_webrtc) {
+        if !moli_web_mime::is_valid_media_capabilities_mime_type(
+            &video.content_type,
+            moli_web_mime::MediaKind::Video,
+            is_webrtc,
+        ) {
             return Err("The video configuration dictionary is not valid");
         }
     }
     Ok(())
 }
 
-fn valid_media_content_type(content_type: &str, prefix: &str, is_webrtc: bool) -> bool {
-    if content_type.trim_end().ends_with(';') {
-        return false;
-    }
-    let Some(parsed) = moli_web_mime::parse_mime(content_type) else {
-        return false;
-    };
-    let Some(essence) = moli_web_mime::mime_essence(content_type) else {
-        return false;
-    };
-    if !essence.starts_with(prefix) {
-        return false;
-    }
-    if is_webrtc {
-        return true;
-    }
-    let mut parameters = parsed.params();
-    let Some((name, codecs)) = parameters.next() else {
-        return false;
-    };
-    if parameters.next().is_some() || !name.as_str().eq_ignore_ascii_case("codecs") {
-        return false;
-    }
-    let codecs = codecs.as_str();
-    let mut codecs = codecs
-        .split(',')
-        .map(str::trim)
-        .filter(|value| !value.is_empty());
-    let Some(codec) = codecs.next() else {
-        return false;
-    };
-    if codecs.next().is_some() {
-        return false;
-    }
-    codec_matches_media_kind(codec, prefix)
-}
-
-fn codec_matches_media_kind(codec: &str, prefix: &str) -> bool {
-    let codec = codec.to_ascii_lowercase();
-    let audio = [
-        "aac", "ac-3", "ec-3", "flac", "mp3", "mp4a", "opus", "vorbis",
-    ];
-    let video = [
-        "av01", "avc1", "avc3", "hev1", "hvc1", "theora", "vp8", "vp9", "vp09",
-    ];
-    let matches = |known: &[&str]| {
-        known.iter().any(|value| {
-            codec == *value
-                || codec
-                    .strip_prefix(*value)
-                    .is_some_and(|suffix| suffix.starts_with('.') || suffix.starts_with('-'))
-        })
-    };
-    if prefix == "audio/" {
-        !matches(&video)
-    } else {
-        !matches(&audio)
-    }
-}
-
 fn configuration_supported(
-    audio: Option<&AudioConfiguration>,
-    video: Option<&VideoConfiguration>,
+    configuration: &MediaConfiguration,
+    configuration_type: MediaConfigurationType,
 ) -> bool {
-    audio.is_none_or(|audio| {
+    // File MIME support does not provide an RTP codec backend.
+    if configuration_type.is_webrtc() {
+        return false;
+    }
+    configuration.audio.as_ref().is_none_or(|audio| {
         moli_web_mime::media_mime_support(&audio.content_type)
             != moli_web_mime::MediaMimeSupport::Unsupported
-    }) && video.is_none_or(|video| {
+    }) && configuration.video.as_ref().is_none_or(|video| {
         moli_web_mime::media_mime_support(&video.content_type)
             != moli_web_mime::MediaMimeSupport::Unsupported
     })
