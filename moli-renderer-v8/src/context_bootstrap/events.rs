@@ -509,7 +509,7 @@ pub(super) use base::{
     event_target_getter_function, event_type_getter_function, set_event_dispatch_fields,
     set_event_dispatch_fields_with_original_target, set_event_initialized,
 };
-pub(in crate::context_bootstrap) use init::{EventInit, parse_event_init};
+pub(in crate::context_bootstrap) use init::EventInit;
 pub(super) use kind::EventSubclassKind;
 pub(crate) use methods::{
     EventHandlerType, apply_before_unload_event_handler_return_value,
