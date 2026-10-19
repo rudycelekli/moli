@@ -30,39 +30,35 @@ struct MediaCapabilitiesPrototypeDeclaration {
     encoding_info: (),
 }
 
-#[derive(WebApiObject)]
-#[webapi(plain)]
-struct MediaCapabilitiesDecodingInfoDeclaration<'scope> {
-    #[webapi(data_property, enumerable)]
-    supported: bool,
-
-    #[webapi(data_property, enumerable)]
-    smooth: bool,
-
-    #[webapi(data_property, enumerable)]
+#[derive(webidl::WebIdlDictionary)]
+#[webidl(prefix = "MediaCapabilitiesInfo", snapshot)]
+struct MediaCapabilitiesInfo {
+    #[webidl(required)]
     power_efficient: bool,
-
-    #[webapi(data_property, enumerable)]
-    key_system_access: v8::Local<'scope, v8::Value>,
-
-    #[webapi(data_property, enumerable)]
-    configuration: v8::Local<'scope, v8::Object>,
+    #[webidl(required)]
+    smooth: bool,
+    #[webidl(required)]
+    supported: bool,
 }
 
-#[derive(WebApiObject)]
-#[webapi(plain)]
-struct MediaCapabilitiesEncodingInfoDeclaration<'scope> {
-    #[webapi(data_property, enumerable)]
-    supported: bool,
+#[derive(webidl::WebIdlDictionary)]
+#[webidl(prefix = "MediaCapabilitiesDecodingInfo", snapshot)]
+struct MediaCapabilitiesDecodingInfo<'s> {
+    #[webidl(inherit)]
+    info: MediaCapabilitiesInfo,
+    #[webidl(required, dictionary)]
+    configuration: MediaDecodingConfiguration,
+    #[webidl(required, nullable, interface = web_api_interfaces::MediaKeySystemAccess)]
+    key_system_access: Option<v8::Local<'s, v8::Object>>,
+}
 
-    #[webapi(data_property, enumerable)]
-    smooth: bool,
-
-    #[webapi(data_property, enumerable)]
-    power_efficient: bool,
-
-    #[webapi(data_property, enumerable)]
-    configuration: v8::Local<'scope, v8::Object>,
+#[derive(webidl::WebIdlDictionary)]
+#[webidl(prefix = "MediaCapabilitiesEncodingInfo", snapshot)]
+struct MediaCapabilitiesEncodingInfo {
+    #[webidl(inherit)]
+    info: MediaCapabilitiesInfo,
+    #[webidl(required, dictionary)]
+    configuration: MediaEncodingConfiguration,
 }
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq, webidl::WebIdlEnum)]
@@ -110,97 +106,93 @@ enum TransferFunction {
 #[derive(webidl::WebIdlDictionary)]
 #[webidl(prefix = "AudioConfiguration", snapshot)]
 struct AudioConfiguration {
-    // Snapshot order preserves result keys independently of input conversion.
-    #[webidl(required, snapshot_order = 0)]
+    #[webidl(required)]
     content_type: String,
-    #[webidl(snapshot_order = 1)]
     channels: Option<String>,
-    #[webidl(snapshot_order = 2)]
     bitrate: Option<u64>,
-    #[webidl(snapshot_order = 3)]
     samplerate: Option<u32>,
-    #[webidl(snapshot_order = 4)]
     spatial_rendering: Option<bool>,
 }
 
 #[derive(webidl::WebIdlDictionary)]
 #[webidl(prefix = "VideoConfiguration", snapshot)]
 struct VideoConfiguration {
-    #[webidl(required, snapshot_order = 0)]
+    #[webidl(required)]
     content_type: String,
-    #[webidl(required, snapshot_order = 1)]
+    #[webidl(required)]
     width: u32,
-    #[webidl(required, snapshot_order = 2)]
+    #[webidl(required)]
     height: u32,
-    #[webidl(required, snapshot_order = 3)]
+    #[webidl(required)]
     bitrate: u64,
-    #[webidl(required, converter = "double", snapshot_order = 4)]
+    #[webidl(required, converter = "double")]
     framerate: f64,
-    #[webidl(snapshot_order = 5)]
     has_alpha_channel: Option<bool>,
-    #[webidl(converter = "enum", snapshot_order = 6)]
+    #[webidl(converter = "enum")]
     hdr_metadata_type: Option<HdrMetadataType>,
-    #[webidl(converter = "enum", snapshot_order = 7)]
+    #[webidl(converter = "enum")]
     color_gamut: Option<ColorGamut>,
-    #[webidl(converter = "enum", snapshot_order = 8)]
+    #[webidl(converter = "enum")]
     transfer_function: Option<TransferFunction>,
-    #[webidl(snapshot_order = 9)]
     scalability_mode: Option<String>,
-    #[webidl(snapshot_order = 10)]
     spatial_scalability: Option<bool>,
 }
 
 #[derive(webidl::WebIdlDictionary)]
 #[webidl(prefix = "KeySystemTrackConfiguration", snapshot)]
 struct KeySystemTrackConfiguration {
-    #[webidl(default = "", snapshot_order = 0)]
-    robustness: String,
-    #[webidl(with = optional_nullable_dom_string_member, snapshot_order = 1)]
-    #[webidl(snapshot_kind = webidl::SnapshotKind::Nullable(&webidl::SnapshotKind::Scalar))]
-    encryption_scheme: Option<Option<String>>,
+    #[webidl(converter = "raw", default = webidl::DomString16(Vec::new()))]
+    robustness: webidl::DomString16,
+    #[webidl(nullable, converter = "raw")]
+    encryption_scheme: Option<webidl::DomString16>,
 }
 
 #[derive(webidl::WebIdlDictionary)]
 #[webidl(prefix = "MediaCapabilitiesKeySystemConfiguration", snapshot)]
 struct MediaCapabilitiesKeySystemConfiguration {
-    #[webidl(required, snapshot_order = 0)]
+    #[webidl(required)]
     key_system: String,
-    #[webidl(default = "", snapshot_order = 1)]
+    #[webidl(default = "")]
     init_data_type: String,
-    #[webidl(converter = "enum", default = MediaKeysRequirement::Optional, snapshot_order = 2)]
+    #[webidl(converter = "enum", default = MediaKeysRequirement::Optional)]
     distinctive_identifier: MediaKeysRequirement,
-    #[webidl(converter = "enum", default = MediaKeysRequirement::Optional, snapshot_order = 3)]
+    #[webidl(converter = "enum", default = MediaKeysRequirement::Optional)]
     persistent_state: MediaKeysRequirement,
-    #[webidl(sequence, snapshot_order = 4)]
+    #[webidl(sequence)]
     session_types: Option<Vec<String>>,
-    #[webidl(dictionary, snapshot_order = 5)]
+    #[webidl(dictionary)]
     audio: Option<KeySystemTrackConfiguration>,
-    #[webidl(dictionary, snapshot_order = 6)]
+    #[webidl(dictionary)]
     video: Option<KeySystemTrackConfiguration>,
+}
+
+#[derive(webidl::WebIdlDictionary)]
+#[webidl(prefix = "MediaConfiguration", snapshot)]
+struct MediaConfiguration {
+    #[webidl(dictionary)]
+    audio: Option<AudioConfiguration>,
+    #[webidl(dictionary)]
+    video: Option<VideoConfiguration>,
 }
 
 #[derive(webidl::WebIdlDictionary)]
 #[webidl(prefix = "MediaDecodingConfiguration", snapshot)]
 struct MediaDecodingConfiguration {
-    #[webidl(dictionary, snapshot_order = 0)]
-    audio: Option<AudioConfiguration>,
-    #[webidl(name = "keySystemConfiguration", dictionary, snapshot_order = 3)]
+    #[webidl(inherit)]
+    media: MediaConfiguration,
+    #[webidl(name = "keySystemConfiguration", dictionary)]
     key_system_configuration: Option<MediaCapabilitiesKeySystemConfiguration>,
-    #[webidl(name = "type", required, converter = "enum", snapshot_order = 2)]
+    #[webidl(name = "type", required, converter = "enum")]
     decoding_type: MediaDecodingType,
-    #[webidl(dictionary, snapshot_order = 1)]
-    video: Option<VideoConfiguration>,
 }
 
 #[derive(webidl::WebIdlDictionary)]
 #[webidl(prefix = "MediaEncodingConfiguration", snapshot)]
 struct MediaEncodingConfiguration {
-    #[webidl(dictionary, snapshot_order = 0)]
-    audio: Option<AudioConfiguration>,
-    #[webidl(name = "type", required, converter = "enum", snapshot_order = 2)]
+    #[webidl(inherit)]
+    media: MediaConfiguration,
+    #[webidl(name = "type", required, converter = "enum")]
     encoding_type: MediaEncodingType,
-    #[webidl(dictionary, snapshot_order = 1)]
-    video: Option<VideoConfiguration>,
 }
 
 #[derive(webidl::WebIdlArgs)]
@@ -260,59 +252,42 @@ fn media_capabilities_decoding_info_callback<'s>(
         return;
     }
 
-    if configuration.key_system_configuration.is_some() {
-        let (name, message) = if media_capabilities_is_worker(scope, receiver) {
-            (
-                "InvalidStateError",
+    let supported = if configuration.key_system_configuration.is_some() {
+        if media_capabilities_is_worker(scope, receiver) {
+            let reason = crate::context_bootstrap::new_dom_exception_value(
+                scope,
                 "Encrypted media capabilities are unavailable in workers",
-            )
-        } else if !media_capabilities_is_secure_context(scope, receiver) {
-            (
-                "SecurityError",
-                "Encrypted media capabilities require a secure context",
-            )
-        } else {
-            let Some(configuration_object) =
-                configuration.to_js_snapshot(scope, SnapshotPrototype::Ordinary)
-            else {
-                rv.set_undefined();
-                return;
-            };
-            let Ok(info) = MediaCapabilitiesDecodingInfoDeclaration::new(
-                false,
-                false,
-                false,
-                v8::null(scope).into(),
-                configuration_object,
-            )
-            .bind(scope) else {
-                rv.set_undefined();
-                return;
-            };
-            set_resolved_promise(scope, &mut rv, info.into());
+                "InvalidStateError",
+            );
+            set_rejected_promise(scope, &mut rv, reason);
             return;
-        };
-        let reason = crate::context_bootstrap::new_dom_exception_value(scope, message, name);
-        set_rejected_promise(scope, &mut rv, reason);
-        return;
-    }
-
-    let Some(configuration_object) =
-        configuration.to_js_snapshot(scope, SnapshotPrototype::Ordinary)
-    else {
-        rv.set_undefined();
-        return;
+        }
+        if !media_capabilities_is_secure_context(scope, receiver) {
+            let reason = crate::context_bootstrap::new_dom_exception_value(
+                scope,
+                "Encrypted media capabilities require a secure context",
+                "SecurityError",
+            );
+            set_rejected_promise(scope, &mut rv, reason);
+            return;
+        }
+        false
+    } else {
+        configuration_supported(
+            configuration.media.audio.as_ref(),
+            configuration.media.video.as_ref(),
+        )
     };
-    let supported =
-        configuration_supported(configuration.audio.as_ref(), configuration.video.as_ref());
-    let Ok(info) = MediaCapabilitiesDecodingInfoDeclaration::new(
-        supported,
-        false,
-        false,
-        v8::null(scope).into(),
-        configuration_object,
-    )
-    .bind(scope) else {
+    let info = MediaCapabilitiesDecodingInfo {
+        info: MediaCapabilitiesInfo {
+            power_efficient: false,
+            smooth: false,
+            supported,
+        },
+        configuration,
+        key_system_access: None,
+    };
+    let Some(info) = info.to_js_snapshot(scope, SnapshotPrototype::Ordinary) else {
         rv.set_undefined();
         return;
     };
@@ -337,21 +312,19 @@ fn media_capabilities_encoding_info_callback<'s>(
         set_rejected_promise(scope, &mut rv, reason);
         return;
     }
-    let Some(configuration_object) =
-        configuration.to_js_snapshot(scope, SnapshotPrototype::Ordinary)
-    else {
-        rv.set_undefined();
-        return;
+    let supported = configuration_supported(
+        configuration.media.audio.as_ref(),
+        configuration.media.video.as_ref(),
+    );
+    let info = MediaCapabilitiesEncodingInfo {
+        info: MediaCapabilitiesInfo {
+            power_efficient: false,
+            smooth: false,
+            supported,
+        },
+        configuration,
     };
-    let supported =
-        configuration_supported(configuration.audio.as_ref(), configuration.video.as_ref());
-    let Ok(info) = MediaCapabilitiesEncodingInfoDeclaration::new(
-        supported,
-        false,
-        false,
-        configuration_object,
-    )
-    .bind(scope) else {
+    let Some(info) = info.to_js_snapshot(scope, SnapshotPrototype::Ordinary) else {
         rv.set_undefined();
         return;
     };
@@ -428,30 +401,12 @@ fn media_capabilities_is_worker<'s>(
         .is_some_and(|value| value.boolean_value(scope))
 }
 
-fn optional_nullable_dom_string_member<'s>(
-    scope: &mut v8::PinScope<'s, '_>,
-    object: v8::Local<'s, v8::Object>,
-    name: &'static str,
-) -> std::result::Result<Option<Option<String>>, webidl::WebIdlError> {
-    let context = webidl::Context::member("KeySystemTrackConfiguration", name);
-    let Some(value) = webidl::property_result(scope, object, name, context)? else {
-        return Ok(None);
-    };
-    if value.is_undefined() {
-        return Ok(None);
-    }
-    if value.is_null() {
-        return Ok(Some(None));
-    }
-    webidl::convert::<webidl::DomString>(scope, value, context).map(|value| Some(Some(value.0)))
-}
-
 fn validate_decoding_configuration(
     configuration: &MediaDecodingConfiguration,
 ) -> std::result::Result<(), &'static str> {
     validate_media_configuration(
-        configuration.audio.as_ref(),
-        configuration.video.as_ref(),
+        configuration.media.audio.as_ref(),
+        configuration.media.video.as_ref(),
         configuration.decoding_type == MediaDecodingType::Webrtc,
         true,
     )?;
@@ -459,10 +414,10 @@ fn validate_decoding_configuration(
         if configuration.decoding_type == MediaDecodingType::Webrtc {
             return Err("keySystemConfiguration is not valid for WebRTC decoding");
         }
-        if key_system.audio.is_some() && configuration.audio.is_none() {
+        if key_system.audio.is_some() && configuration.media.audio.is_none() {
             return Err("keySystemConfiguration.audio requires an audio configuration");
         }
-        if key_system.video.is_some() && configuration.video.is_none() {
+        if key_system.video.is_some() && configuration.media.video.is_none() {
             return Err("keySystemConfiguration.video requires a video configuration");
         }
         if key_system.session_types.as_ref().is_some_and(|types| {
@@ -480,8 +435,8 @@ fn validate_encoding_configuration(
     configuration: &MediaEncodingConfiguration,
 ) -> std::result::Result<(), &'static str> {
     validate_media_configuration(
-        configuration.audio.as_ref(),
-        configuration.video.as_ref(),
+        configuration.media.audio.as_ref(),
+        configuration.media.video.as_ref(),
         configuration.encoding_type == MediaEncodingType::Webrtc,
         false,
     )

@@ -1,6 +1,19 @@
 use super::*;
 
 #[test]
+fn media_capabilities_inherited_members_convert_before_derived_getters() {
+    let mut vm =
+        new_storage_page_task_executor_test_vm("https://media-capabilities-conversion.test/");
+    vm.eval(include_str!("media_capabilities_conversion.js"))
+        .unwrap();
+    vm.eval("0").unwrap();
+    assert_eq!(
+        vm.eval("__mediaCapabilitiesConversionResult").unwrap(),
+        "ok"
+    );
+}
+
+#[test]
 fn media_capabilities_dictionary_snapshots_preserve_conversion_and_define_own_data() {
     let mut vm =
         new_storage_page_task_executor_test_vm("https://media-capabilities-snapshot.test/");

@@ -24,13 +24,14 @@ globalThis.__mediaCapabilitiesSnapshotResult = 'pending';
         };
         const promise = capabilities[method](input);
         check(promise instanceof Promise, 'query returns a Promise');
-        check(reads === 'audio,bitrate,channels,contentType,samplerate,spatialRendering,type,video,', 'lexical conversion order');
+        check(reads === 'audio,bitrate,channels,contentType,samplerate,spatialRendering,video,type,', 'base dictionary converts before derived members');
         for (const key of Object.keys(input)) Object.defineProperty(input, key, {get() { throw new Error('input read after conversion'); }});
         for (const key of Object.getOwnPropertyNames(child)) Object.defineProperty(child, key, {get() { throw new Error('nested input read after conversion'); }});
         const result = await promise;
+        check(Object.keys(result).join() === (method === 'decodingInfo' ? 'powerEfficient,smooth,supported,configuration,keySystemAccess' : 'powerEfficient,smooth,supported,configuration'), 'result dictionary inheritance order');
         check(result.configuration.audio.channels === '2', 'converted nested result');
         check(Object.keys(result.configuration).join() === 'audio,type', 'configuration output order');
-        check(Object.keys(result.configuration.audio).join() === 'contentType,channels,bitrate,samplerate,spatialRendering', 'audio output order');
+        check(Object.keys(result.configuration.audio).join() === 'bitrate,channels,contentType,samplerate,spatialRendering', 'audio output order');
         dataProperties(result, window);
         const stable = Object.freeze({type: method === 'decodingInfo' ? 'file' : 'record', audio: Object.freeze(audio())});
         const first = await capabilities[method](stable);
@@ -41,7 +42,7 @@ globalThis.__mediaCapabilitiesSnapshotResult = 'pending';
         Object.freeze(second.configuration.audio);
         check((await capabilities[method](stable)).configuration.audio.channels === '2', 'frozen prior result');
     }
-    for (const scheme of [undefined, null, 'cenc']) {
+    for (const scheme of [undefined, null, 'cenc', 'cbc\uD800']) {
         const track = {};
         if (scheme !== undefined) track.encryptionScheme = scheme;
         const input = {type: 'file', audio: audio(), keySystemConfiguration: {keySystem: 'org.w3.clearkey', sessionTypes: ['temporary', 'temporary'], audio: track}};
@@ -49,14 +50,18 @@ globalThis.__mediaCapabilitiesSnapshotResult = 'pending';
         input.keySystemConfiguration.sessionTypes[0] = 'changed';
         const result = await promise;
         const key = result.configuration.keySystemConfiguration;
-        check(Object.keys(result.configuration).join() === 'audio,type,keySystemConfiguration', 'decoding output order');
+        check(Object.keys(result.configuration).join() === 'audio,keySystemConfiguration,type', 'decoding output order');
         check(key.distinctiveIdentifier === 'optional' && key.persistentState === 'optional' && key.initDataType === '', 'dictionary defaults');
         check(key.audio.robustness === '', 'nested dictionary default');
-        check(Object.hasOwn(key.audio, 'encryptionScheme') === (scheme !== undefined), 'absent versus nullable member');
-        if (scheme !== undefined) check(key.audio.encryptionScheme === scheme, 'nullable member value');
+        check(Object.hasOwn(key.audio, 'encryptionScheme'), 'nullable default creates a member');
+        check(key.audio.encryptionScheme === (scheme === undefined ? null : scheme), 'nullable member default and value');
+        check(Object.keys(key.audio).join() === 'encryptionScheme,robustness', 'nested dictionary member order');
         check(key.sessionTypes.join() === 'temporary,temporary' && key.sessionTypes !== input.keySystemConfiguration.sessionTypes, 'copied sequence preserves duplicates');
         dataProperties(result, window);
     }
+    const codeUnits = '\uD800\u0000\uDCFF';
+    const unicode = await capabilities.decodingInfo({type: 'file', audio: audio(), keySystemConfiguration: {keySystem: 'org.w3.clearkey', audio: {robustness: codeUnits, encryptionScheme: codeUnits}}});
+    check(unicode.configuration.keySystemConfiguration.audio.robustness === codeUnits && unicode.configuration.keySystemConfiguration.audio.encryptionScheme === codeUnits, 'DOMString code units');
     const names = ['audio', 'video', 'type', 'configuration', 'contentType', 'width', 'sessionTypes', 'keySystemConfiguration', 'encryptionScheme'];
     const marker = {};
     for (const mode of ['count', 'throw', 'readonly', 'index']) {
