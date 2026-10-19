@@ -945,7 +945,7 @@ async fn worker_csp_string_compilation_keywords_preserve_source_token_boundaries
             ("\u{000b}", "", false),
             ("", "\u{000b}", false),
         ] {
-            let policy = format!("script-src {prefix}'{keyword}'{suffix}");
+            let policy = format!("default-src 'none'; script-src {prefix}'{keyword}'{suffix}");
             let source = format!(
                 "postMessage(({}).slice(0, 2)); close();",
                 include_str!("../../../../tests/fixtures/csp-eval-source-tokens.js"),

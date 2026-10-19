@@ -23,9 +23,25 @@ fn trusted_types_csp_policy_creation_matches_only_valid_name_tokens() {
         (
             "trusted-types ignored política; trusted-types valid",
             "ignored",
+            "allowed",
+        ),
+        (
+            "trusted-types valid; trusted-types ignored política",
+            "ignored",
             "TypeError",
         ),
-        ("trusted-types \u{000b}*", "arbitrary", "TypeError"),
+        (
+            "trusted-types valid; trusted-types ignored política",
+            "valid",
+            "allowed",
+        ),
+        ("trusted-types \u{000b}*", "arbitrary", "allowed"),
+        ("trusted-types *\u{000b}", "arbitrary", "allowed"),
+        (
+            "trusted-types valid \u{000b}'allow-duplicates'",
+            "arbitrary",
+            "allowed",
+        ),
         ("trusted-types *", "name with spaces", "allowed"),
         ("", "name with spaces", "allowed"),
         ("trusted-types valid", "policy$name", "TypeError"),
@@ -37,6 +53,30 @@ fn trusted_types_csp_policy_creation_matches_only_valid_name_tokens() {
             serde_json::to_string(name).unwrap(),
         );
         assert_eq!(vm.eval(&script).unwrap(), expected, "{policy:?}, {name:?}");
+    }
+}
+
+#[test]
+fn trusted_types_invalid_name_directives_preserve_sink_requirements() {
+    for invalid in ['\0', '\u{000b}', '\u{001f}', '\u{007f}', '\u{00a0}'] {
+        let mut vm = new_storage_test_vm("https://trusted-types-invalid-directive.test/");
+        let policy = format!("trusted-types *{invalid}; require-trusted-types-for 'script'");
+        vm.set_response_content_security_policies(std::slice::from_ref(&policy));
+        let result = vm
+            .eval(
+                r#"(() => {
+                const first = trustedTypes.createPolicy('unlisted', {createHTML: value => value});
+                const second = trustedTypes.createPolicy('unlisted', {createHTML: value => value});
+                const element = document.createElement('div');
+                let errorName = 'none';
+                try { element.innerHTML = '<i>untrusted</i>'; }
+                catch (error) { errorName = error.name; }
+                element.innerHTML = second.createHTML('<b>trusted</b>');
+                return [first !== second, errorName, element.innerHTML].join('|');
+            })()"#,
+            )
+            .expect("discarding an invalid name directive must retain valid sink requirements");
+        assert_eq!(result, "true|TypeError|<b>trusted</b>", "{policy:?}");
     }
 }
 

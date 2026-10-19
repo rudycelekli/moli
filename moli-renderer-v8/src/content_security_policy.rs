@@ -1343,18 +1343,28 @@ fn effective_source_list_with_directive(
 }
 
 fn parsed_directives(policy: &str) -> Vec<(&str, Vec<&str>)> {
+    let mut names = HashSet::new();
     policy
         .split(';')
         .filter_map(|directive| {
-            // CSP discards the entire non-ASCII directive, independently of
-            // other directives in the same policy and before duplicate lookup.
-            if !directive.is_ascii() {
+            // Split on exactly CSP's ASCII whitespace. Do not trim controls
+            // into a valid directive name or source expression.
+            let mut parts = directive.split_ascii_whitespace();
+            let name = parts.next()?;
+            // The first occurrence takes the name even if its value is invalid.
+            // Later duplicates must not override it or suppress a fallback.
+            if !names.insert(name.to_ascii_lowercase()) {
                 return None;
             }
-            let mut parts = directive.split_ascii_whitespace();
-            // split_ascii_whitespace already trims exactly the CSP whitespace
-            // set. A subsequent str::trim would incorrectly erase vertical tabs.
-            Some((parts.next()?, parts.collect()))
+            // Non-whitespace controls, DEL and non-ASCII characters invalidate
+            // the entire directive, without affecting the rest of the policy.
+            if !directive
+                .bytes()
+                .all(|byte| byte.is_ascii_whitespace() || byte.is_ascii_graphic())
+            {
+                return None;
+            }
+            Some((name, parts.collect()))
         })
         .collect()
 }
@@ -2448,14 +2458,168 @@ mod tests {
             );
             assert_eq!(
                 collect(b"img-src *\x0b, img-src 'none'"),
-                ["img-src *\u{000b}", "img-src 'none'"]
+                ["img-src 'none'"]
             );
             let policies = collect(b"img-src *\x0b");
-            assert!(!content_security_policy_allows_url(
+            assert!(policies.is_empty());
+            assert!(content_security_policy_allows_url(
                 &policies,
                 &protected_url(),
                 &request_url("https://cdn.test/asset"),
                 ContentSecurityPolicyResourceKind::DocumentImage,
+            ));
+            assert!(!content_security_policy_allows_url(
+                &collect(b"img-src *\x0b, img-src 'none'"),
+                &protected_url(),
+                &request_url("https://cdn.test/asset"),
+                ContentSecurityPolicyResourceKind::DocumentImage,
+            ));
+        }
+    }
+
+    #[test]
+    fn csp_invalid_directive_characters_do_not_block_resources_or_discard_other_directives() {
+        for invalid in ('\0'..='\u{0008}')
+            .chain(['\u{000b}'])
+            .chain('\u{000e}'..='\u{001f}')
+            .chain(['\u{007f}', '\u{0080}', '\u{00a0}', '\u{feff}', '中'])
+        {
+            for value in [
+                format!("{invalid}'none'"),
+                format!("'no{invalid}ne'"),
+                format!("'none'{invalid}"),
+            ] {
+                let policy = format!("img-src {value}; script-src 'none'; report-uri /blocked");
+                let policies = [policy.clone()];
+                for disposition in [
+                    ContentSecurityPolicyDisposition::Enforce,
+                    ContentSecurityPolicyDisposition::Report,
+                ] {
+                    let violation = |kind| {
+                        content_security_policy_url_violation_with_redirect_status_disposition_and_reporting_endpoints(
+                            &policies,
+                            &protected_url(),
+                            &request_url("https://cdn.test/asset"),
+                            kind,
+                            ContentSecurityPolicyRedirectStatus::NoRedirect,
+                            disposition,
+                            &ContentSecurityPolicyReportingEndpoints::default(),
+                        )
+                    };
+                    assert!(
+                        violation(ContentSecurityPolicyResourceKind::DocumentImage).is_none(),
+                        "{policy:?}",
+                    );
+                    let blocked =
+                        violation(ContentSecurityPolicyResourceKind::DocumentScriptElement)
+                            .expect("the valid script-src directive must still block");
+                    assert_eq!(blocked.effective_directive, SCRIPT_SRC_ELEM);
+                    assert_eq!(blocked.disposition, disposition);
+                    assert_eq!(blocked.original_policy, policy);
+                    assert_eq!(blocked.report_uri_endpoints, ["https://app.test/blocked"]);
+                }
+            }
+        }
+    }
+
+    #[test]
+    fn csp_invalid_directives_preserve_fallbacks_and_trusted_types_requirements() {
+        for invalid in ['\0', '\u{000b}', '\u{001f}', '\u{007f}', '\u{00a0}'] {
+            let policy = format!(
+                "default-src 'self'; img-src *{invalid}; \
+                 script-src 'unsafe-eval'{invalid}; trusted-types *{invalid}; \
+                 require-trusted-types-for 'script'"
+            );
+            assert!(!allowed(
+                &policy,
+                ContentSecurityPolicyResourceKind::DocumentImage,
+                "https://cdn.test/asset",
+            ));
+            assert!(allowed(
+                &policy,
+                ContentSecurityPolicyResourceKind::DocumentImage,
+                "https://app.test/asset",
+            ));
+            assert!(
+                content_security_policy_non_url_violation_with_source(
+                    &policy,
+                    &protected_url(),
+                    ContentSecurityPolicyNonUrlKind::Eval,
+                    None,
+                    ContentSecurityPolicyDisposition::Enforce,
+                    &ContentSecurityPolicyReportingEndpoints::default(),
+                )
+                .is_some(),
+                "{policy:?}",
+            );
+            assert!(policy_requires_trusted_types_for_script(&policy));
+            for duplicate in [false, true] {
+                assert!(policy_allows_trusted_type_policy_name(
+                    &policy, "unlisted", duplicate,
+                ));
+            }
+
+            let policy = format!(
+                "trusted-types allowed; require-trusted-types-for 'script'{invalid}; img-src 'none'"
+            );
+            assert!(!policy_requires_trusted_types_for_script(&policy));
+            assert!(policy_allows_trusted_type_policy_name(
+                &policy, "allowed", false
+            ));
+            assert!(!policy_allows_trusted_type_policy_name(
+                &policy, "unlisted", false
+            ));
+            assert!(!allowed(
+                &policy,
+                ContentSecurityPolicyResourceKind::DocumentImage,
+                "https://app.test/asset",
+            ));
+        }
+    }
+
+    #[test]
+    fn csp_invalid_first_values_do_not_activate_later_duplicate_directives() {
+        for invalid in ['\0', '\u{000b}', '\u{001f}', '\u{007f}', '\u{00a0}', '中'] {
+            let policy = format!("default-src 'none'; img-src *{invalid}; IMG-SRC *");
+            assert!(!allowed(
+                &policy,
+                ContentSecurityPolicyResourceKind::DocumentImage,
+                "https://cdn.test/asset",
+            ));
+            let policy = format!("img-src 'none'{invalid}; IMG-SRC 'none'");
+            assert!(allowed(
+                &policy,
+                ContentSecurityPolicyResourceKind::DocumentImage,
+                "https://cdn.test/asset",
+            ));
+            for policy in [
+                format!("default-src 'none'; img-src{invalid} 'none'; img-src *"),
+                format!("default-src 'none'; {invalid}img-src 'none'; img-src *"),
+            ] {
+                assert!(
+                    allowed(
+                        &policy,
+                        ContentSecurityPolicyResourceKind::DocumentImage,
+                        "https://cdn.test/asset",
+                    ),
+                    "{policy:?}"
+                );
+            }
+            let policy = format!("trusted-types *{invalid}; TRUSTED-TYPES allowed");
+            for duplicate in [false, true] {
+                assert!(policy_allows_trusted_type_policy_name(
+                    &policy, "unlisted", duplicate
+                ));
+            }
+            let policy = format!("trusted-types allowed; TRUSTED-TYPES *{invalid}");
+            assert!(policy_allows_trusted_type_policy_name(
+                &policy, "allowed", false
+            ));
+            assert!(!policy_allows_trusted_type_policy_name(
+                &policy, "unlisted", false
+            ));
+            assert!(!policy_allows_trusted_type_policy_name(
+                &policy, "allowed", true
             ));
         }
     }
@@ -2488,7 +2652,10 @@ mod tests {
                     format!("{padding}'{keyword}'"),
                     format!("'{keyword}'{padding}"),
                 ] {
-                    let policy = format!("default-src {source}");
+                    let policy = format!(
+                        "default-src 'none'; {} {source}",
+                        kind.effective_directive()
+                    );
                     let violation = content_security_policy_non_url_violation_with_source(
                         &policy,
                         &protected_url(),
@@ -2515,7 +2682,7 @@ mod tests {
                 ("", "\u{000b}", false),
             ] {
                 let token = format!("{prefix}{expression}{suffix}");
-                let policy = format!("default-src {token}");
+                let policy = format!("default-src 'none'; script-src {token}; style-src {token}");
                 let request = ContentSecurityPolicyScriptElementRequest {
                     nonce: Some("abc"),
                     integrity: Some(integrity),
@@ -2541,25 +2708,19 @@ mod tests {
 
                 // Invalid nonce/hash tokens must not disable unsafe-inline or
                 // activate strict-dynamic and erase a URL allowlist either.
-                let inline_policy = format!("script-src 'unsafe-inline' {token}");
-                let handler = content_security_policy_inline_source_violation_with_disposition_and_reporting_endpoints(
-                    &inline_policy, &protected_url(),
-                    ContentSecurityPolicyNonUrlKind::DocumentInlineEventHandler,
-                    "untrusted()", ContentSecurityPolicyDisposition::Enforce, &endpoints,
-                );
-                assert_eq!(handler.is_none(), !valid, "{inline_policy:?}");
-                let dynamic_policy =
-                    format!("script-src 'strict-dynamic' https://cdn.test {token}");
+                let inline_sources = format!("'unsafe-inline' {token}");
+                let inline_sources: Vec<_> = inline_sources.split_ascii_whitespace().collect();
                 assert_eq!(
-                    script_element_request_allowed(
-                        &dynamic_policy,
-                        ContentSecurityPolicyScriptElementRequest {
-                            parser_inserted: true,
-                            ..ContentSecurityPolicyScriptElementRequest::default()
-                        }
-                    ),
+                    inline_event_handler_source_list_allows(&inline_sources, "untrusted()"),
                     !valid,
-                    "{dynamic_policy:?}",
+                    "{inline_sources:?}",
+                );
+                let dynamic_sources = format!("'strict-dynamic' https://cdn.test {token}");
+                let dynamic_sources: Vec<_> = dynamic_sources.split_ascii_whitespace().collect();
+                assert_eq!(
+                    source_list_activates_strict_dynamic(&dynamic_sources),
+                    valid,
+                    "{dynamic_sources:?}",
                 );
             }
         }
@@ -2580,7 +2741,8 @@ mod tests {
                 ContentSecurityPolicyNonUrlKind::DocumentInlineStyleAttribute,
             ] {
                 let violation = content_security_policy_inline_source_violation_with_disposition_and_reporting_endpoints(
-                    &format!("default-src {sources}"), &protected_url(), kind, "t1.done();",
+                    &format!("default-src 'none'; {} {sources}", kind.effective_directive()),
+                    &protected_url(), kind, "t1.done();",
                     ContentSecurityPolicyDisposition::Enforce,
                     &ContentSecurityPolicyReportingEndpoints::default(),
                 );
@@ -2597,7 +2759,7 @@ mod tests {
             ("\u{000b}", "", false),
             ("", "\u{000b}", false),
         ] {
-            let policy = format!("script-src {prefix}'report-sample'{suffix}");
+            let policy = format!("default-src 'none'; script-src {prefix}'report-sample'{suffix}");
             for disposition in [
                 ContentSecurityPolicyDisposition::Enforce,
                 ContentSecurityPolicyDisposition::Report,
@@ -3194,8 +3356,17 @@ mod tests {
                 ContentSecurityPolicyRedirectStatus::FollowedRedirect,
             ] {
                 assert!(
+                    !source_expression_matches(
+                        source,
+                        &protected_url(),
+                        &request_url(request),
+                        redirect_status,
+                    ),
+                    "{source:?} must not match {request:?} ({redirect_status:?})"
+                );
+                assert!(
                     !content_security_policy_allows_url_with_redirect_status(
-                        &[format!("img-src {source}")],
+                        &[format!("default-src 'none'; img-src {source}")],
                         &protected_url(),
                         &request_url(request),
                         ContentSecurityPolicyResourceKind::DocumentImage,
@@ -4689,7 +4860,12 @@ mod tests {
 
     #[test]
     fn trusted_types_csp_name_grammar_matches_only_valid_tokens() {
-        for byte in 0..=127u8 {
+        // Directive grammar errors are tested separately: they discard the
+        // directive before its tt-policy-name tokens are interpreted.
+        for byte in [b'\t', b'\n', b'\x0c', b'\r']
+            .into_iter()
+            .chain(b' '..=b'~')
+        {
             let name = format!("policy{}name", char::from(byte));
             let policy = format!("trusted-types {name}");
             let expected = byte.is_ascii_alphanumeric() || b"-#=_/@.%".contains(&byte);
@@ -4716,7 +4892,7 @@ mod tests {
             "policy*name",
             false,
         ));
-        for wildcard in ["\u{000b}*", "*\u{000b}", "policy*"] {
+        for wildcard in ["policy*", "**"] {
             assert!(!policy_allows_trusted_type_policy_name(
                 &format!("trusted-types {wildcard}"),
                 "valid",
@@ -4724,7 +4900,7 @@ mod tests {
             ));
         }
         assert!(!policy_allows_trusted_type_policy_name(
-            "trusted-types valid \u{000b}'allow-duplicates'",
+            "trusted-types valid x'allow-duplicates'",
             "valid",
             true,
         ));
@@ -4757,7 +4933,7 @@ mod tests {
     }
 
     #[test]
-    fn csp_directive_parser_discards_each_non_ascii_directive_before_duplicate_matching() {
+    fn csp_directive_parser_discards_invalid_values_without_replacing_first_directives() {
         for directive in [
             "trusted-types allowed política",
             "trusted-types\u{a0}allowed",
@@ -4773,18 +4949,12 @@ mod tests {
             "trusted-types invalid política; TRUSTED-TYPES allowed; trusted-types *; \
              script-src 'none'; img-src https://例子.test; img-src 'self'",
         );
-        assert_eq!(
-            directive_source_list(&directives, TRUSTED_TYPES),
-            Some(["allowed"].as_slice()),
-        );
+        assert!(directive_source_list(&directives, TRUSTED_TYPES).is_none());
         assert_eq!(
             directive_source_list(&directives, SCRIPT_SRC),
             Some(["'none'"].as_slice()),
         );
-        assert_eq!(
-            directive_source_list(&directives, IMG_SRC),
-            Some(["'self'"].as_slice()),
-        );
+        assert!(directive_source_list(&directives, IMG_SRC).is_none());
     }
 
     #[test]
